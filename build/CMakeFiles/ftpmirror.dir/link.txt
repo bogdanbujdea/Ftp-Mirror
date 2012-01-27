@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/ftpmirror.dir/TcpClient.o CMakeFiles/ftpmirror.dir/FtpClient.o CMakeFiles/ftpmirror.dir/Exception.o CMakeFiles/ftpmirror.dir/main.o  -o ftpmirror -rdynamic -lpthread 

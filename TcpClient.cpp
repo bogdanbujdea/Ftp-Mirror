@@ -1,0 +1,184 @@
+/*
+    <one line to give the program's name and a brief idea of what it does.>
+    Copyright (C) 2012  <copyright holder> <email>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+
+#include "TcpClient.h"
+
+char *TcpClient::HostToIp(char *hostname)
+{
+    char *retVal;
+    retVal = new char[100];
+    if (!isalpha(hostname[0]))
+        return hostname;
+    struct hostent *host;
+    if ((host = gethostbyname(hostname)) == NULL)
+    {
+        perror("(mini) nslookup failed");
+        exit(1);
+    }
+    //server.sin_addr.s_addr = *((unsigned long *) host->h_addr_list[0]);
+    strcpy(retVal, inet_ntoa(*((struct in_addr *)host->h_addr)));
+    return retVal;
+}
+
+TcpClient::TcpClient()
+{
+    _port = 21;
+}
+
+TcpClient::TcpClient(char *ip)
+{
+    _ip = new char[100];
+    _hostname = new char[1024];
+    if (isdigit(ip[0]))
+        _ip = ip;
+    else
+    {
+        strcpy(_hostname, ip);
+        strcpy(_ip, HostToIp(_hostname));
+    }
+}
+
+
+
+int TcpClient::ConnectToServer()
+{
+    /* cream socketul */
+    if ((_Socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
+    {
+        perror ("Eroare la socket().\n"); //ErrorHandler
+        return errno;
+    }
+    if (!isdigit(_ip[0]))
+    {
+        strcpy(_hostname, _ip);
+        strcpy(_ip, HostToIp(_hostname));
+    }
+    _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
+    /* umplem structura folosita pentru realizarea conexiunii cu serverul */
+    /* familia socket-ului */
+    server.sin_family = AF_INET;
+    /* adresa IP a serverului */
+    server.sin_addr.s_addr = inet_addr(_ip);
+    /* portul de conectare */
+    server.sin_port = htons (_port);
+
+    /* ne conectam la server */
+    if (connect (_Socket, (struct sockaddr *) &server,sizeof (sockaddr)) == -1)
+    {
+        perror ("[client]Eroare la connect().\n"); //ErrorHandler
+        return errno;
+    }
+    char buffer[256];
+    strcpy(buffer, ReceiveMessage());
+    cout << buffer;
+    if (GetCode(buffer) == 220)
+    {
+        cout << "Connected to server: " << this->_ip << endl;
+        return 0;
+    }
+    else
+    {
+        cout << "Connection failed";
+        return 1;
+    }
+    return 1;
+}
+
+int TcpClient::GetCode(char *msg)
+{
+    char tmp[4];
+    if (msg == NULL || strlen(msg) <= 3)
+        return 0;
+    for (int i = 0; i < 3; i++) tmp[i] = msg[i];
+    tmp[3] = '\0';
+    int code = atoi(tmp);
+    return code;
+}
+
+
+void TcpClient::SetIp(char *ip)
+{
+    _ip = ip;
+}
+
+void TcpClient::SetPort(int port)
+{
+    _port = port;
+}
+
+char *TcpClient::ReceiveMessage()
+{
+    char *buffer, *message;
+    buffer = new char[2048];
+    message = new char[2048];
+    bzero(buffer,2048);
+    int size = 0;
+    do {
+        size = read(_Socket,buffer,2047);
+        strcat(message, buffer);
+    }
+    while (buffer[size - 1] != '\n');
+
+
+    if (size)
+        return buffer;
+    else throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
+}
+
+void TcpClient::SendMessage(char *buffer)
+{
+    int x = 0;
+    char message[strlen(buffer+5)];
+    strcpy(message, buffer);
+    strcat(message, "\n");
+    x = write (_Socket, message, strlen(message));
+    if (x <= 0)
+    {
+        Exception *ex = new Exception();
+        throw(new Exception("Error while sending message:", SEND_EXCEPTION, errno));
+    }
+}
+
+int TcpClient::CloseConnection()
+{
+    close (_Socket);
+    return 1;
+}
+
+TcpClient::TcpClient(const TcpClient& other)
+{
+
+}
+
+TcpClient::~TcpClient()
+{
+
+}
+
+TcpClient& TcpClient::operator=(const TcpClient& other)
+{
+    return *this;
+}
+
+bool TcpClient::operator==(const TcpClient& other) const
+{
+///TODO: return ...;
+}
+

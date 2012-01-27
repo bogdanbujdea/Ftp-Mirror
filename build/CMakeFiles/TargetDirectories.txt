@@ -1,0 +1,1 @@
+/home/bogdan/projects/FtpMirror/build/CMakeFiles/ftpmirror.dir
