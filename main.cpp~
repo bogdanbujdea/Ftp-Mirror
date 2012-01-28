@@ -21,7 +21,7 @@ int main(int argc, char **argv)
       exit(1);
     }
     else cout << "Login succesfull" << endl;
-    iret1 = pthread_create( &thread1, NULL, WaitForMessage, NULL);
+    //iret1 = pthread_create( &thread1, NULL, WaitForMessage, NULL);
    //client->List();
     int opt = 0;
     while (1)

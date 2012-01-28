@@ -129,13 +129,14 @@ char *TcpClient::ReceiveMessage()
     buffer = new char[2048];
     message = new char[2048];
     bzero(buffer,2048);
+    bzero(message, 2048);
     int size = 0;
     do {
         size = read(_Socket,buffer,2047);
         strcat(message, buffer);
     }
     while (buffer[size - 1] != '\n');
-
+    message[size - 2] = '\0';
 
     if (size)
         return buffer;
@@ -145,8 +146,10 @@ char *TcpClient::ReceiveMessage()
 void TcpClient::SendMessage(char *buffer)
 {
     int x = 0;
-    strcat(buffer, "\n");
-    x = write (_Socket, buffer, strlen(buffer));
+    char message[strlen(buffer+5)];
+    strcpy(message, buffer);
+    strcat(message, "\n");
+    x = write (_Socket, message, strlen(message));
     if (x <= 0)
     {
         Exception *ex = new Exception();
