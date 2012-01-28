@@ -21,7 +21,9 @@
 #ifndef FTPCLIENT_H
 #define FTPCLIENT_H
 #include "TcpClient.h"
+#include <fstream>
 
+using namespace std;
 
 class FtpClient : public TcpClient
 {
@@ -39,7 +41,11 @@ public:
     FtpClient(const FtpClient& other);
     void SetPassword(char *pass);
     void SetUserName(char *name);
+    int GetSocket();
+    int CreateThread();
+    int GetFile(char *filePath);
     char *GetResult();
+    void *WaitForMessage( void *ptr );
     virtual ~FtpClient();
     virtual FtpClient& operator=(const FtpClient& other);
     virtual bool operator==(const FtpClient& other) const;

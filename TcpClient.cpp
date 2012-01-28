@@ -131,6 +131,8 @@ char *TcpClient::ReceiveMessage()
     bzero(buffer,2048);
     bzero(message, 2048);
     int size = 0;
+    //vezi cum primesti mesajele corect
+    //si faci alta fct pt dld fisiere
     do {
         size = read(_Socket,buffer,2047);
         strcat(message, buffer);
@@ -138,10 +140,7 @@ char *TcpClient::ReceiveMessage()
 	  break;
     }
     while (buffer[size - 1] != '\n');
-    
-   
-
-    if (size > 0)
+    if (strlen(message) > 0)
     {
        message[size - 2] = '\0';
       return message;

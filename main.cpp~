@@ -42,29 +42,27 @@ int main(int argc, char **argv)
             cout << "Enter the name of the folder:";
             scanf("%s", &dir);
             client->List(dir);
-            iret1 = pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
+            client->CreateThread();
             break;
         case 2:
             cout << "Enter the name of the folder:";
             scanf("%s", &dir);
             client->ChangeDir(dir);
-            iret1 = pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
             break;
 	case 3:
 	    cout << endl;
-	    client->DownloadFile("");
+	    scanf("%s", &dir);
+	    client->DownloadFile(dir);
+	    pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
 	    break;
 	      
         default:
             cout << "wrong choice";
         }
+        pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
         sleep(1);
     }
-    printf("Thread 1 returns: %d\n",iret1);
-    //printf("Thread 2 returns: %d\n",iret2);
 }
-
-
 
 void *WaitForMessage( void *ptr )
 {
@@ -76,3 +74,8 @@ void *WaitForMessage( void *ptr )
         cout << endl << client->ReceiveMessage() << endl;
     }
 }
+
+
+
+
+

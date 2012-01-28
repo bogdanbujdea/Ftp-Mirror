@@ -106,18 +106,18 @@ int FtpClient::DownloadFile(char *filePath)
 {
     try
     {
-        char *buffer[2048];
         string list[100];
         int i = 0, j = 0, n;
         List(filePath);
-	cout << "\nbefore while\n";
-	//folosesti list pentru fisier
-	//daca e fisier(nume[0] != 'd'), si ai drept de citire, at schimbi pe ASCII sau Binary si il dld
-	//vezi cum faci sa il dld, in ce mod, poate e in tipul fisierului
-	//si mai vezi cum iei toate atributele, poate faci si o clasa/structura pentru asta, sau poate este deja
-	//acum fugi si dormi :>
-	//dupa ce determini toate chestiile de mai sus, apelezi RETR, si il dld
-	//dar vezi cum faci pe bucati...ca poate fi prea mare
+	ReceiveMessage();
+	ReceiveMessage();
+        //folosesti list pentru fisier
+        //daca e fisier(nume[0] != 'd'), si ai drept de citire, at schimbi pe ASCII sau Binary si il dld
+        //vezi cum faci sa il dld, in ce mod, poate e in tipul fisierului
+        //si mai vezi cum iei toate atributele, poate faci si o clasa/structura pentru asta, sau poate este deja
+        //acum fugi si dormi :>
+        //dupa ce determini toate chestiile de mai sus, apelezi RETR, si il dld
+        //dar vezi cum faci pe bucati...ca poate fi prea mare
         while (j < strlen(Result))
         {
             //list[i] = new string;
@@ -128,19 +128,103 @@ int FtpClient::DownloadFile(char *filePath)
             i++;
             j++;
         }
-        cout << "\nafter while\n";
         n = i;
         for (i = 0; i < n; i++)
         {
             cout <<"\nlist["<<i<<"]="<<list[i];
         }
+        char buffer[4096];
+        if (list[0][0] != 'd')
+        {
+	    cout << "file is not directory\n";
+	    sleep(3);
+            pthread_cancel(msgThread);
+            SendMessage("TYPE I");
+            strcpy(buffer, ReceiveMessage());
+            cout << endl << buffer << endl;
+            SendMessage("PASV");
+            strcpy(buffer, ReceiveMessage());
+            int port = GetPortFromCode(buffer);
+            server.sin_port = htons (port);
+            /* ne conectam la server */
+            _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
+            if (connect (_CmdSocket, (struct sockaddr *) &server,sizeof (sockaddr)) == -1)
+            {
+                cout << "[CmdClient]Eroare la connect().\n" << endl;
+                return errno;
+            }
+            int tmpSock = _Socket;
+            char msg[2048];
+            strcpy(msg, "RETR ");
+            strcat(msg, filePath);
+            char fileName[256];
+	    bzero(fileName, 256);
+            int i = 0, k;
+            for (k = strlen(filePath) - 1; k >= 0; k--)
+                if (filePath[k] != '/' && filePath[k] != ' ')
+                    fileName[i++] = filePath[k];
+		else break;
+            fileName[i] = '\0';
+            cout << "reversed file name="<<fileName << endl;
+            int len;
+            len=strlen(fileName);
 
+            for (int i=0,j=len-1;i<len/2;i++,j--)
+	    {
+	      swap(fileName[i], fileName[j]);
+	    }
+	     
+            fileName[len]='\0';
+	    cout << "\nfileName=" << fileName << endl;
+            SendMessage(msg); //sending RETR command
+            _Socket = _CmdSocket;
+            strcpy(buffer, ReceiveMessage());
+	    ofstream myFile (fileName, ios::out | ios::binary);
+	    if(!myFile.is_open())
+	      cout << "file was not opened for writing\n";
+	    else
+	    myFile.write(buffer, strlen(buffer));
+	    myFile.close();
+	    _Socket = tmpSock;
+	    close(_CmdSocket);
+        }
         //strcpy(buffer, Result);
     }
     catch (Exception ex)
     {
-
+      cout << ex.Message << "\b" << ex.ErrorCode << endl;
     }
+}
+
+int TcpClient::GetFile(char *filePath)
+{
+    char *buffer;
+    buffer = new char[2048];
+    bzero(buffer,2048);
+    int size = 0, fileSize = 0;
+    ofstream file(filePath, ios::out | ios::binary);
+    if(!file.is_open())
+      throw (new Exception("Couldn't create new file", UNKNOWN_EXCEPTION, errno));
+    do {
+        size = read(_Socket,buffer,2047);
+	if(size > 0)
+	{
+	  fileSize += size;
+	  file.write(buffer, size);
+	}
+        else
+	  break;
+    }
+    while (size > 0);
+    file.close();
+    if(size < 0)
+      throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
+    else return ;
+}
+
+int FtpClient::GetSocket()
+{
+  return _Socket;
 }
 
 int FtpClient::List(char *dir)
@@ -176,6 +260,7 @@ int FtpClient::List(char *dir)
         _Socket = _CmdSocket;
         strcpy(buffer, ReceiveMessage());
         cout << "LIST RESULT:\n" << buffer;
+        bzero(Result, 4096);
         strcpy(Result, buffer);
         _Socket = tmp;
         close(_CmdSocket);
