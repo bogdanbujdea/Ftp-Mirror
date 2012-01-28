@@ -34,6 +34,7 @@ int main(int argc, char **argv)
         cout << "\n1.List directories";
         cout << "\n2.Change directory";
 	cout << "\n3.Download file";
+	cout << "\n4.Download folder";
         cout << endl;
         cin>>opt;
         switch (opt)
@@ -55,7 +56,10 @@ int main(int argc, char **argv)
 	    client->DownloadFile(dir);
 	    
 	    break;
-	      
+	case 4:
+	  cout << "starting download\n";
+	  client->DownloadFolder("/" , "/home/bogdan");
+	  break;
         default:
             cout << "wrong choice";
         }
@@ -71,7 +75,7 @@ void *WaitForMessage( void *ptr )
     int n;
     while (1)
     {
-        cout << endl << client->ReceiveMessage() << endl;
+        cout << endl << "Received: " << client->ReceiveMessage() << endl;
     }
 }
 

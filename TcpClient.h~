@@ -44,9 +44,10 @@ protected:
     int _Socket, _CmdSocket;// descriptorul de socket
     struct sockaddr_in server;
     char *_ip, *_hostname;
-    pthread_t msgThread;
+    
 public:
     TcpClient();
+    pthread_t msgThread;
     char *HostToIp(char *hostname);
     TcpClient(char* hostname);
     int ConnectToServer();

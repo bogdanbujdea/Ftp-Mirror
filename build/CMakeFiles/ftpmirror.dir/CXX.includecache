@@ -25,6 +25,8 @@ sys/types.h
 -
 sys/socket.h
 -
+sys/stat.h
+-
 netinet/in.h
 -
 arpa/inet.h

@@ -102,6 +102,29 @@ int GetPortFromCode(char *code)
     return (port1 * 256) + port2;
 }
 
+char* GetFileName(char *filePath)
+{
+    char fileName[256];
+    bzero(fileName, 256);
+    int i = 0, k;
+    for (k = strlen(filePath) - 1; k >= 0; k--)
+        if (filePath[k] != '/' && filePath[k] != ' ')
+            fileName[i++] = filePath[k];
+        else break;
+    fileName[i] = '\0';
+
+    int len;
+    len=strlen(fileName);
+
+    for (int i=0,j=len-1;i<len/2;i++,j--)
+    {
+        swap(fileName[i], fileName[j]);
+    }
+
+    fileName[len]='\0';
+    return fileName;
+}
+
 int FtpClient::DownloadFile(char *filePath)
 {
     try
@@ -109,8 +132,8 @@ int FtpClient::DownloadFile(char *filePath)
         string list[100];
         int i = 0, j = 0, n;
         List(filePath);
-	ReceiveMessage();
-	ReceiveMessage();
+        ReceiveMessage();
+        ReceiveMessage();
         //folosesti list pentru fisier
         //daca e fisier(nume[0] != 'd'), si ai drept de citire, at schimbi pe ASCII sau Binary si il dld
         //vezi cum faci sa il dld, in ce mod, poate e in tipul fisierului
@@ -136,8 +159,8 @@ int FtpClient::DownloadFile(char *filePath)
         char buffer[4096];
         if (list[0][0] != 'd')
         {
-	    cout << "file is not directory\n";
-	    sleep(3);
+            cout << "file is not directory\n";
+            sleep(3);
             pthread_cancel(msgThread);
             SendMessage("TYPE I");
             strcpy(buffer, ReceiveMessage());
@@ -158,39 +181,138 @@ int FtpClient::DownloadFile(char *filePath)
             strcpy(msg, "RETR ");
             strcat(msg, filePath);
             char fileName[256];
-	    bzero(fileName, 256);
-            int i = 0, k;
-            for (k = strlen(filePath) - 1; k >= 0; k--)
-                if (filePath[k] != '/' && filePath[k] != ' ')
-                    fileName[i++] = filePath[k];
-		else break;
-            fileName[i] = '\0';
-            cout << "reversed file name="<<fileName << endl;
-            int len;
-            len=strlen(fileName);
-
-            for (int i=0,j=len-1;i<len/2;i++,j--)
-	    {
-	      swap(fileName[i], fileName[j]);
-	    }
-	     
-            fileName[len]='\0';
-	    cout << "\nfileName=" << fileName << endl;
+            bzero(fileName, 256);
+//             int i = 0, k;
+//             for (k = strlen(filePath) - 1; k >= 0; k--)
+//                 if (filePath[k] != '/' && filePath[k] != ' ')
+//                     fileName[i++] = filePath[k];
+//                 else break;
+//             fileName[i] = '\0';
+//             cout << "reversed file name="<<fileName << endl;
+//             int len;
+//             len=strlen(fileName);
+//
+//             for (int i=0,j=len-1;i<len/2;i++,j--)
+//             {
+//                 swap(fileName[i], fileName[j]);
+//             }
+//
+//             fileName[len]='\0';
+            strcpy(fileName, GetFileName(filePath));
+            cout << "\nfileName=" << fileName << endl;
             SendMessage(msg); //sending RETR command
             _Socket = _CmdSocket;
-	    int fileSize = GetFile(fileName);
-            if(fileSize)
-		cout << "File downloaded with a size of " << fileSize << endl;
-	    else cout << "File wasn't downloaded\n";
-	    _Socket = tmpSock;
-	    close(_CmdSocket);
+            int fileSize = GetFile(fileName);
+            if (fileSize)
+                cout << "File downloaded with a size of " << fileSize << endl;
+            else cout << "File wasn't downloaded\n";
+            _Socket = tmpSock;
+            close(_CmdSocket);
         }
         //strcpy(buffer, Result);
     }
     catch (Exception ex)
     {
-      cout << ex.Message << "\b" << ex.ErrorCode << endl;
+        cout << ex.Message << "\b" << ex.ErrorCode << endl;
     }
+}
+
+int FtpClient::DownloadFolder(char *dir, char *lDir)
+{
+    try
+    {
+        int error = ChangeDir(dir);
+        if (error)
+            cout << "failed to change dir="<<dir<<" , errno="<<error<<endl;
+        else cout << "dir changed to "<<dir<<endl;
+        char localdir[512];
+        strcpy(localdir, lDir);
+        cout << "\nInitial localdir="<<localdir<<endl;
+	if(localdir[strlen(localdir) - 1] != '/')
+	  strcat(localdir, "/");
+        if (!strcmp(dir, "/"))
+        {
+            strcat(localdir, "root");
+	    
+            if (!mkdir(localdir, 0777))
+                cout << "\ndirectory root created\n";
+            else
+            {
+                cout <<"\ndirectory root wasn't created";
+            }
+        }
+        else
+        {
+            strcat(localdir, dir);
+            if (!mkdir(localdir, 0777))
+                cout << "\ndirectory " << localdir << "created";
+            else
+            {
+                cout <<"\ndirectory " << localdir << "wasn't created";
+
+            }
+        }
+        cout << "localdir="<<localdir<<endl;
+        string list[1000];
+        int i = 0, j = 0, n = 0;
+        if (!List(dir))
+        {
+            cout << endl << ReceiveMessage();
+            cout << endl << ReceiveMessage();
+            while (j < strlen(Result))
+            {
+                //list[i] = new string;
+                while (Result[j] == '\r' || Result[j] == '\n')
+                    j++;
+                while (Result[j] != '\r' && Result[j] != '\n' && Result[j] != '\0')
+                {
+                    list[i] += Result[j++];
+                }
+                cout << "list["<<i<<"]="<<list[i] << endl;
+                int found = list[i].find_last_of(' ');
+                if (list[i][0] == 'd')
+                {
+                    string folder = list[i].substr(found+1);
+
+                    cout << "found folder="<<folder << endl;
+                    char fd[256];
+                    strcpy( fd, dir);
+		    if(dir[strlen(dir) - 1] != '/')
+		      strcat(fd, "/");
+		    strcat(fd, folder.c_str());
+                    DownloadFolder(fd, localdir);
+                }
+                else
+                {
+                    char file[256];
+                    strcpy(file, list[i].substr(found+1).c_str());
+                    cout << "file ="<< file << endl;
+                    DownloadFile(file);
+                }
+                i++;
+                j++;
+            }
+            n = i;
+        }
+//         for (i = 0; i < n; i++)
+//         {
+//             cout <<"\nlist["<<i<<"]="<<list[i];
+//         }
+//
+
+    }
+    catch (Exception ex)
+    {
+        cout << ex.Message << endl << ex.ErrorCode << endl;
+    }
+    //first time, create root on local
+    //if(dir == '/') create root, else create directory
+    //SetCurrentDir(dir) -on local
+    //get a list of files from this dir on server with List(dir)
+    //iterate the list of files
+    //for each dir, call this function
+    //for each file, save them on local directory
+    //
 }
 
 int FtpClient::GetFile(char *filePath)
@@ -200,28 +322,28 @@ int FtpClient::GetFile(char *filePath)
     bzero(buffer,2048);
     int size = 0, fileSize = 0;
     ofstream file(filePath, ios::out | ios::binary);
-    if(!file.is_open())
-      throw (new Exception("Couldn't create new file", UNKNOWN_EXCEPTION, errno));
+    if (!file.is_open())
+        throw (new Exception("Couldn't create new file", UNKNOWN_EXCEPTION, errno));
     do {
         size = read(_Socket,buffer,2047);
-	if(size > 0)
-	{
-	  fileSize += size;
-	  file.write(buffer, size);
-	}
+        if (size > 0)
+        {
+            fileSize += size;
+            file.write(buffer, size);
+        }
         else
-	  break;
+            break;
     }
     while (size > 0);
     file.close();
-    if(fileSize == 0)
-      throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
+    if (fileSize == 0)
+        throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
     else return fileSize;
 }
 
 int FtpClient::GetSocket()
 {
-  return _Socket;
+    return _Socket;
 }
 
 int FtpClient::List(char *dir)

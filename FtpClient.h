@@ -42,6 +42,7 @@ public:
     void SetPassword(char *pass);
     void SetUserName(char *name);
     int GetSocket();
+    int DownloadFolder(char *dir, char *localdir);
     int CreateThread();
     int GetFile(char *filePath);
     char *GetResult();
