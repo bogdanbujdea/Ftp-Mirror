@@ -28,11 +28,12 @@ FtpClient::FtpClient() : TcpClient()
     password = new char[1024];
     strcpy(userName, "anonymous");
     strcpy(password, "pass@mail.com");
-
+    Result = new char[4096];
 }
 
 FtpClient::FtpClient(char *ip) : TcpClient(ip)
 {
+    Result = new char[4096];
     userName = new char[1024];
     password = new char[1024];
     strcpy(userName, "anonymous");
@@ -43,9 +44,25 @@ FtpClient::FtpClient(char *ip) : TcpClient(ip)
 
 int FtpClient::Login(char* username, char* password)
 {
+    Result = new char[4096];
     strcpy(this->userName, username);
     strcpy(this->password, password);
     return Login();
+}
+
+void FtpClient::SetUserName(char *name)
+{
+    strcpy(userName, name);
+}
+
+void FtpClient::SetPassword(char *pass)
+{
+    strcpy(password, pass);
+}
+
+char* FtpClient::GetResult()
+{
+    return Result;
 }
 
 int GetPortFromCode(char *code)
@@ -85,6 +102,40 @@ int GetPortFromCode(char *code)
     return (port1 * 256) + port2;
 }
 
+int FtpClient::DownloadFile(char *filePath)
+{
+    try
+    {
+        char *buffer[2048];
+        string list[100];
+        int i = 0, j = 0, n;
+        List(filePath);
+	cout << "\nbefore while\n";
+        while (j < strlen(Result))
+        {
+            //list[i] = new string;
+            while (Result[j] != '\n')
+            {
+                list[i] += Result[j++];
+            }
+            i++;
+            j++;
+        }
+        cout << "\nafter while\n";
+        n = i;
+        for (i = 0; i < n; i++)
+        {
+            cout <<"\nlist["<<i<<"]="<<list[i];
+        }
+
+        //strcpy(buffer, Result);
+    }
+    catch (Exception ex)
+    {
+
+    }
+}
+
 int FtpClient::List(char *dir)
 {
     if (_CmdSocket == -1)
@@ -92,34 +143,35 @@ int FtpClient::List(char *dir)
     try
     {
         char buffer[2048];
-	pthread_cancel(msgThread);
-	
+        pthread_cancel(msgThread);
+
         SendMessage("PASV");
         strcpy(buffer, ReceiveMessage());
-	cout << buffer << endl;
+        cout << buffer << endl;
         int port = GetPortFromCode(buffer);
         server.sin_port = htons (port);
         /* ne conectam la server */
-	_CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
+        _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (connect (_CmdSocket, (struct sockaddr *) &server,sizeof (sockaddr)) == -1)
         {
             cout << "[CmdClient]Eroare la connect().\n" << endl;
             return errno;
         }
         int tmp = _Socket;
-	char tmpDir[2048];
-	if(strlen(dir) && strcmp(dir, "this"))
-	{
-	  strcpy(tmpDir, "LIST ");
-	  strcat(tmpDir, dir);
-	}
-	else strcpy(tmpDir, "LIST");
+        char tmpDir[2048];
+        if (strlen(dir) && strcmp(dir, "this"))
+        {
+            strcpy(tmpDir, "LIST ");
+            strcat(tmpDir, dir);
+        }
+        else strcpy(tmpDir, "LIST");
         SendMessage(tmpDir);
         _Socket = _CmdSocket;
         strcpy(buffer, ReceiveMessage());
-	cout << "LIST RESULT:\n" << buffer;
+        cout << "LIST RESULT:\n" << buffer;
+        strcpy(Result, buffer);
         _Socket = tmp;
-	close(_CmdSocket);
+        close(_CmdSocket);
     }
     catch (Exception ex)
     {
@@ -131,26 +183,26 @@ int FtpClient::List(char *dir)
 
 int FtpClient::ChangeDir(char* dir)
 {
-   try
-   {
-     char buffer[2048];
-     strcpy(buffer, "CWD ");
-     strcat(buffer, dir);
-    pthread_cancel(msgThread);
-     SendMessage(buffer);
-     strcpy(buffer, ReceiveMessage());
-     cout << buffer << endl;
-     int code = GetCode(buffer);
-     if (code != 250)
-       return code;
-     else
-       return 0;
-   }
-   catch(Exception ex)
-   {
-     cout << ex.Message;
-     return ex.ErrorCode;
-   }
+    try
+    {
+        char buffer[2048];
+        strcpy(buffer, "CWD ");
+        strcat(buffer, dir);
+        pthread_cancel(msgThread);
+        SendMessage(buffer);
+        strcpy(buffer, ReceiveMessage());
+        cout << buffer << endl;
+        int code = GetCode(buffer);
+        if (code != 250)
+            return code;
+        else
+            return 0;
+    }
+    catch (Exception ex)
+    {
+        cout << ex.Message;
+        return ex.ErrorCode;
+    }
 }
 
 

@@ -12,7 +12,11 @@ string
 string.h
 -
 
-/home/bogdan/projects/FtpMirror/TcpClient.cpp
+/home/bogdan/projects/FtpMirror/FtpClient.cpp
+FtpClient.h
+/home/bogdan/projects/FtpMirror/FtpClient.h
+
+/home/bogdan/projects/FtpMirror/FtpClient.h
 TcpClient.h
 /home/bogdan/projects/FtpMirror/TcpClient.h
 

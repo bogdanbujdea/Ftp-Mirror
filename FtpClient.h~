@@ -27,14 +27,18 @@ class FtpClient : public TcpClient
 {
 //TcpClient *tcpClient;
 char *userName, *password;
+char *Result;
 public:
     FtpClient(char *ftpHost);
     FtpClient();
     int Login();
     int Login(char *username, char *password);
-    int List();
+    int List(char *dir);
     int ChangeDir(char *dir);
+    int DownloadFile(char *filePath);
     FtpClient(const FtpClient& other);
+    void SetPassword(char *pass);
+    char *GetResult();
     virtual ~FtpClient();
     virtual FtpClient& operator=(const FtpClient& other);
     virtual bool operator==(const FtpClient& other) const;

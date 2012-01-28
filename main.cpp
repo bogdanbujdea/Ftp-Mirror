@@ -9,6 +9,10 @@ FtpClient *client;
 int main(int argc, char **argv)
 {
     client= new FtpClient("ftp.kde.org");
+    //client->SetUserName("bogdan");
+    //client->SetPassword("");
+    
+    //client->SetPort(21);
     client->ConnectToServer();
     //pthread_t thread1, thread2;
     char buffer[256];
@@ -29,6 +33,7 @@ int main(int argc, char **argv)
     {
         cout << "\n1.List directories";
         cout << "\n2.Change directory";
+	cout << "\n3.Download file";
         cout << endl;
         cin>>opt;
         switch (opt)
@@ -45,6 +50,11 @@ int main(int argc, char **argv)
             client->ChangeDir(dir);
             iret1 = pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
             break;
+	case 3:
+	    cout << endl;
+	    client->DownloadFile("/pub/kde");
+	    break;
+	      
         default:
             cout << "wrong choice";
         }
