@@ -178,13 +178,10 @@ int FtpClient::DownloadFile(char *filePath)
 	    cout << "\nfileName=" << fileName << endl;
             SendMessage(msg); //sending RETR command
             _Socket = _CmdSocket;
-            strcpy(buffer, ReceiveMessage());
-	    ofstream myFile (fileName, ios::out | ios::binary);
-	    if(!myFile.is_open())
-	      cout << "file was not opened for writing\n";
-	    else
-	    myFile.write(buffer, strlen(buffer));
-	    myFile.close();
+	    int fileSize = GetFile(fileName);
+            if(fileSize)
+		cout << "File downloaded with a size of " << fileSize << endl;
+	    else cout << "File wasn't downloaded\n";
 	    _Socket = tmpSock;
 	    close(_CmdSocket);
         }
@@ -196,7 +193,7 @@ int FtpClient::DownloadFile(char *filePath)
     }
 }
 
-char *TcpClient::GetFile(char *filePath)
+int FtpClient::GetFile(char *filePath)
 {
     char *buffer;
     buffer = new char[2048];
@@ -219,7 +216,7 @@ char *TcpClient::GetFile(char *filePath)
     file.close();
     if(size < 0)
       throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
-    else return ;
+    else return fileSize;
 }
 
 int FtpClient::GetSocket()

@@ -42,7 +42,7 @@ int main(int argc, char **argv)
             cout << "Enter the name of the folder:";
             scanf("%s", &dir);
             client->List(dir);
-            pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
+            
             break;
         case 2:
             cout << "Enter the name of the folder:";
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	    cout << endl;
 	    scanf("%s", &dir);
 	    client->DownloadFile(dir);
-	    pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
+	    
 	    break;
 	      
         default:
@@ -71,7 +71,7 @@ void *WaitForMessage( void *ptr )
     int n;
     while (1)
     {
-        cout << endl << client->ReceiveMessage() << endl;
+        cout << endl << "Received: " << client->ReceiveMessage() << endl;
     }
 }
 

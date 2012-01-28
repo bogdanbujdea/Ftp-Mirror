@@ -12,9 +12,11 @@ string
 string.h
 -
 
-/home/bogdan/projects/FtpMirror/TcpClient.cpp
+/home/bogdan/projects/FtpMirror/FtpClient.h
 TcpClient.h
 /home/bogdan/projects/FtpMirror/TcpClient.h
+fstream
+-
 
 /home/bogdan/projects/FtpMirror/TcpClient.h
 iostream
@@ -45,4 +47,10 @@ pthread.h
 -
 Exception.h
 /home/bogdan/projects/FtpMirror/Exception.h
+
+/home/bogdan/projects/FtpMirror/main.cpp
+FtpClient.h
+/home/bogdan/projects/FtpMirror/FtpClient.h
+stdlib.h
+-
 

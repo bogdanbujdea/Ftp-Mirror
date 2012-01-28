@@ -1,0 +1,21 @@
+o.at
+Content-Type: text/rfc822-headers
+
+Return-Path: <kde-devel-request@alpha.tat.physik.uni-tuebingen.de>
+Received: from alpha.tat.physik.uni-tuebingen.de (alpha.tat.physik.uni-tuebingen.de [134.2.170.97])
+	by www.aktiv.co.at (8.8.5/8.8.5) with ESMTP id SAA09581;
+	Tue, 3 Nov 1998 18:27:32 +0100
+Received: by alpha.tat.physik.uni-tuebingen.de id <106808-231>; Tue, 3 Nov 1998 18:13:03 +0100
+From: Sven Radej <sven@lisa.exp.univie.ac.at>
+To: kde-devel@alpha.tat.physik.uni-tuebingen.de
+Subject: Re: Stupid question No. 1456/99999
+Date: 	Tue, 3 Nov 1998 18:09:59 +0100
+X-Mailer: KMail [version 1.0.5]
+Content-Type: 	text/plain; charset=US-ASCII
+References: <Pine.LNX.3.95.981104035524.4924A-100000@lift.ph.unimelb.edu.au>
+MIME-Version: 1.0
+Message-Id: <98110318112100.04647@beta>
+Content-Transfer-Encoding: 7BIT
+Old-Return-Path: <sven@lisa.exp.univie.ac.at>
+X-Orcpt: rfc822;kde-devel@alpha.tat.physik.uni-tuebingen.de
+Resent-Message-ID: <"zR6Un-KXd
