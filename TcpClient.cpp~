@@ -125,24 +125,27 @@ void TcpClient::SetPort(int port)
 
 char *TcpClient::ReceiveMessage()
 {
-    char *buffer, *message;
+    char *buffer;
     buffer = new char[2048];
-    message = new char[2048];
+    string message;
     bzero(buffer,2048);
-    bzero(message, 2048);
+   char *retMsg;
     int size = 0;
     //vezi cum primesti mesajele corect
+    //si faci alta fct pt dld fisiere
     do {
         size = read(_Socket,buffer,2047);
-        strcat(message, buffer);
-	if(size <= 0)
+        if(size > 0)
+	  message += buffer;
+	else
 	  break;
     }
-    while (buffer[size - 1] != '\n');
-    if (strlen(message) > 0)
+    while (message[message.length() - 1] != '\n');
+    if (message.length() > 0)
     {
-       message[size - 2] = '\0';
-      return message;
+      retMsg = new char[message.length() + 1];
+      strcpy(retMsg, message.c_str());
+      return retMsg;
     }
     else throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
 }

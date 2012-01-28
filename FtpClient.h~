@@ -25,28 +25,32 @@
 
 using namespace std;
 
+void *WaitForMessage( void *ptr );
+
 class FtpClient : public TcpClient
 {
-//TcpClient *tcpClient;
-char *userName, *password;
-char *Result;
+    //TcpClient *tcpClient;
+    char *userName, *password;
+    char *Result;
+
 public:
+    pthread_t msgThread;
     FtpClient(char *ftpHost);
     FtpClient();
     int Login();
     int Login(char *username, char *password);
     int List(char *dir);
     int ChangeDir(char *dir);
-    int DownloadFile(char *filePath);
+    int DownloadFile(char *filePath, char *localPath);
     FtpClient(const FtpClient& other);
     void SetPassword(char *pass);
     void SetUserName(char *name);
     int GetSocket();
-    int DownloadFolder(char *dir);
+    int DownloadFolder(char *dir, char *localdir);
     int CreateThread();
     int GetFile(char *filePath);
     char *GetResult();
-    void *WaitForMessage( void *ptr );
+    //void *WaitForMessage( void *ptr );
     virtual ~FtpClient();
     virtual FtpClient& operator=(const FtpClient& other);
     virtual bool operator==(const FtpClient& other) const;

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-void *WaitForMessage( void *ptr );
+
 
 FtpClient *client;
 
@@ -11,7 +11,6 @@ int main(int argc, char **argv)
     client= new FtpClient("ftp.kde.org");
     //client->SetUserName("bogdan");
     //client->SetPassword("");
-    
     //client->SetPort(21);
     client->ConnectToServer();
     //pthread_t thread1, thread2;
@@ -33,8 +32,8 @@ int main(int argc, char **argv)
     {
         cout << "\n1.List directories";
         cout << "\n2.Change directory";
-	cout << "\n3.Download file";
-	cout << "\n4.Download folder";
+        cout << "\n3.Download file";
+        cout << "\n4.Download folder";
         cout << endl;
         cin>>opt;
         switch (opt)
@@ -43,23 +42,25 @@ int main(int argc, char **argv)
             cout << "Enter the name of the folder:";
             scanf("%s", &dir);
             client->List(dir);
-            
+
             break;
         case 2:
             cout << "Enter the name of the folder:";
             scanf("%s", &dir);
             client->ChangeDir(dir);
             break;
-	case 3:
-	    cout << endl;
-	    scanf("%s", &dir);
-	    client->DownloadFile(dir);
-	    
-	    break;
-	case 4:
-	  cout << "starting download\n";
-	  client->DownloadFolder("/pub/kde" , "/home/bogdan");
-	  break;
+        case 3:
+            cout << endl;
+            scanf("%s", &dir);
+            client->DownloadFile(dir,dir);
+
+            break;
+        case 4:
+            cout << "starting download\n";
+            if(client->DownloadFolder("/" , "/home/bogdan") == 0)
+	      cout << "download succesfull\n";
+	    else cout << "\nerror while dld folders\n";
+            break;
         default:
             cout << "wrong choice";
         }
@@ -68,16 +69,7 @@ int main(int argc, char **argv)
     }
 }
 
-void *WaitForMessage( void *ptr )
-{
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
-    char buffer[256];
-    int n;
-    while (1)
-    {
-        cout << endl << "Received: " << client->ReceiveMessage() << endl;
-    }
-}
+
 
 
 
