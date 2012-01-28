@@ -24,6 +24,7 @@ int main(int argc, char **argv)
     iret1 = pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
    //client->List();
     int opt = 0;
+	  char dir[2048];
     while (1)
     {
       cout << "\n1.List directories";
@@ -33,14 +34,16 @@ int main(int argc, char **argv)
       switch(opt)
       {
 	case 1:
+	  cout << "Enter the name of the folder:";
+	  scanf("%s", &dir);
 	  client->List();
 	  iret1 = pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
 	  break;
 	case 2:
 	  cout << "Enter the name of the folder:";
-	  char dir[2048];
 	  scanf("%s", &dir);
 	  client->ChangeDir(dir);
+	  iret1 = pthread_create( &client->msgThread, NULL, WaitForMessage, NULL);
 	  break;
 	default:
 	  cout << "wrong choice";

@@ -134,12 +134,18 @@ char *TcpClient::ReceiveMessage()
     do {
         size = read(_Socket,buffer,2047);
         strcat(message, buffer);
+	if(size <= 0)
+	  break;
     }
     while (buffer[size - 1] != '\n');
-    message[size - 2] = '\0';
+    
+   
 
-    if (size)
-        return message;
+    if (size > 0)
+    {
+       message[size - 2] = '\0';
+      return message;
+    }
     else throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
 }
 

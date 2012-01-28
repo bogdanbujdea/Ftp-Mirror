@@ -33,7 +33,7 @@ public:
     int Login();
     int Login(char *username, char *password);
     int List();
-    int ChangeDir();
+    int ChangeDir(char *dir);
     FtpClient(const FtpClient& other);
     virtual ~FtpClient();
     virtual FtpClient& operator=(const FtpClient& other);

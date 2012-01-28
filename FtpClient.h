@@ -32,7 +32,7 @@ public:
     FtpClient();
     int Login();
     int Login(char *username, char *password);
-    int List();
+    int List(char *dir);
     int ChangeDir(char *dir);
     FtpClient(const FtpClient& other);
     virtual ~FtpClient();

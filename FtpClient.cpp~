@@ -85,7 +85,7 @@ int GetPortFromCode(char *code)
     return (port1 * 256) + port2;
 }
 
-int FtpClient::List()
+int FtpClient::List(char *dir)
 {
     if (_CmdSocket == -1)
         return -1;
@@ -107,9 +107,19 @@ int FtpClient::List()
             return errno;
         }
         int tmp = _Socket;
-        SendMessage("LIST /pub/kde");
-        _Socket = _CmdSocket;
+	char tmpDir[2048];
+	if(strlen(dir) && strcmp(dir, "this"))
+	{
+	  strcpy(tmpDir, "LIST ");
+	  strcat(tmpDir, dir);
+	}
+	else strcpy(tmpDir, "LIST");
+        SendMessage(tmpDir);
+        
         strcpy(buffer, ReceiveMessage());
+	strcpy(buffer, ReceiveMessage());
+	
+	_Socket = _CmdSocket;
 	cout << "LIST RESULT:\n" << buffer;
         _Socket = tmp;
 	close(_CmdSocket);
@@ -129,6 +139,7 @@ int FtpClient::ChangeDir(char* dir)
      char buffer[2048];
      strcpy(buffer, "CWD ");
      strcat(buffer, dir);
+    pthread_cancel(msgThread);
      SendMessage(buffer);
      strcpy(buffer, ReceiveMessage());
      cout << buffer << endl;
