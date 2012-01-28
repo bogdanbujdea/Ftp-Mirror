@@ -111,6 +111,13 @@ int FtpClient::DownloadFile(char *filePath)
         int i = 0, j = 0, n;
         List(filePath);
 	cout << "\nbefore while\n";
+	//folosesti list pentru fisier
+	//daca e fisier(nume[0] != 'd'), si ai drept de citire, at schimbi pe ASCII sau Binary si il dld
+	//vezi cum faci sa il dld, in ce mod, poate e in tipul fisierului
+	//si mai vezi cum iei toate atributele, poate faci si o clasa/structura pentru asta, sau poate este deja
+	//acum fugi si dormi :>
+	//dupa ce determini toate chestiile de mai sus, apelezi RETR, si il dld
+	//dar vezi cum faci pe bucati...ca poate fi prea mare
         while (j < strlen(Result))
         {
             //list[i] = new string;
