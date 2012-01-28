@@ -92,6 +92,8 @@ int FtpClient::List()
     try
     {
         char buffer[2048];
+	pthread_cancel(msgThread);
+	
         SendMessage("PASV");
         strcpy(buffer, ReceiveMessage());
 	cout << buffer << endl;
@@ -127,6 +129,7 @@ int FtpClient::ChangeDir(char* dir)
      char buffer[2048];
      strcpy(buffer, "CWD ");
      strcat(buffer, dir);
+    pthread_cancel(msgThread);
      SendMessage(buffer);
      strcpy(buffer, ReceiveMessage());
      cout << buffer << endl;

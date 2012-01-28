@@ -32,6 +32,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <string>
+#include <pthread.h>
 #include "Exception.h"
 using namespace std;
 extern int errno;
@@ -43,8 +44,10 @@ protected:
     int _Socket, _CmdSocket;// descriptorul de socket
     struct sockaddr_in server;
     char *_ip, *_hostname;
+    
 public:
     TcpClient();
+    pthread_t msgThread;
     char *HostToIp(char *hostname);
     TcpClient(char* hostname);
     int ConnectToServer();

@@ -92,6 +92,8 @@ int FtpClient::List()
     try
     {
         char buffer[2048];
+	pthread_cancel(msgThread);
+	
         SendMessage("PASV");
         strcpy(buffer, ReceiveMessage());
 	cout << buffer << endl;
@@ -105,7 +107,7 @@ int FtpClient::List()
             return errno;
         }
         int tmp = _Socket;
-        SendMessage("LIST");
+        SendMessage("LIST /pub/kde");
         _Socket = _CmdSocket;
         strcpy(buffer, ReceiveMessage());
 	cout << "LIST RESULT:\n" << buffer;
