@@ -140,13 +140,20 @@ char *TcpClient::ReceiveMessage()
 	else
 	  break;
     }
-    while (message[message.length() - 1] != '\n');
-    if (message.length() > 0)
+    while (buffer[strlen(buffer) - 1] != '\n');
+    
+    if (size > 0)
     {
       retMsg = new char[message.length() + 1];
       strcpy(retMsg, message.c_str());
+      int size = strlen(retMsg);
+      for(int i = size - 1; i > size - 3; i--) 
+	if(retMsg[i] == '\n' || retMsg[i] == '\r')
+	  retMsg[i] = '\0';
       return retMsg;
     }
+    else if (size == 0) return "";
+    
     else throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
 }
 

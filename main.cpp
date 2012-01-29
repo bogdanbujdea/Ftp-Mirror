@@ -8,9 +8,9 @@ FtpClient *client;
 
 int main(int argc, char **argv)
 {
-    client= new FtpClient("ftp.kde.org");
-    //client->SetUserName("bogdan");
-    //client->SetPassword("");
+    client= new FtpClient("users9.nofeehost.com");
+    client->SetUserName("bogdanftp");
+    client->SetPassword("bogdan12");
     //client->SetPort(21);
     client->ConnectToServer();
     //pthread_t thread1, thread2;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
             break;
         case 4:
             cout << "starting download\n";
-            if(client->DownloadFolder("/" , "/home/bogdan") == 0)
+            if(client->DownloadFolder("/bogdanftp" , "/home/bogdan") == 0)
 	      cout << "download succesfull\n";
 	    else cout << "\nerror while dld folders\n";
             break;

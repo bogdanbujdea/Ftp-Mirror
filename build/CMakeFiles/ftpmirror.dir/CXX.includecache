@@ -54,9 +54,3 @@ pthread.h
 Exception.h
 /home/bogdan/projects/FtpMirror/Exception.h
 
-/home/bogdan/projects/FtpMirror/main.cpp
-FtpClient.h
-/home/bogdan/projects/FtpMirror/FtpClient.h
-stdlib.h
--
-
