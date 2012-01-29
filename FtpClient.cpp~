@@ -161,6 +161,8 @@ char* GetFileName(char *filePath)
     }
     strcpy(fileName, vector[i-1].c_str());
     cout << "\nfileName="<<fileName<<endl;
+    if(!strcmp(fileName, "index.htm"))
+      int d=0;
 //     for (k = strlen(filePath) - 1; k >= 0; k--)
 //         if (filePath[k] != '/' && filePath[k] != ' ')
 //             fileName[i++] = filePath[k];
@@ -186,29 +188,7 @@ int FtpClient::DownloadFile(char *filePath, char *localPath)
         int code = 0;
         string list[1000];
         int i = 0, j = 0, n;
-//         code = List(filePath);
-//         if (code != 0)
-//             cout << "\nlist failed with error code="<<code<<endl;
-//         if (strlen(Result) == 0)
-//             return 2;
-//         while (j < strlen(Result))
-//         {
-//             //list[i] = new string;
-//             while (Result[j] != '\n')
-//             {
-//                 list[i] += Result[j++];
-//             }
-//             i++;
-//             j++;
-//         }
-//         n = i;
-// //         for (i = 0; i < n; i++)
-// //         {
-// //             cout <<"\nlist["<<i<<"]="<<list[i];
-// //         }
         char buffer[4096];
-//         if (list[0][0] != 'd')
-//         {
         pthread_cancel(msgThread);
         SendMessage("TYPE I");
         strcpy(buffer, ReceiveMessage());
@@ -218,13 +198,17 @@ int FtpClient::DownloadFile(char *filePath, char *localPath)
             return code;
         SendMessage("PASV");
         strcpy(buffer, ReceiveMessage());
-        cout << endl << buffer << endl;
+        cout << "PASV " << buffer << endl;
         code = GetCode(buffer);
         if (code != 227)
             return code;
         int port = 0;
         port = GetPortFromCode(buffer);
-        cout << "port="<<port<<endl;
+	if(port == 0)
+	{
+	  cout << "port="<<port<<endl;
+	  return PORT_ERROR;
+	}
         server.sin_port = htons (port);
         /* ne conectam la server */
         _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -232,7 +216,7 @@ int FtpClient::DownloadFile(char *filePath, char *localPath)
         {
             cout << "[CmdClient]Eroare la connect().\n" << endl;
             perror("eroare=");
-            return errno;
+            return CONNECTION_ERROR;
         }
         else cout << "CmdSocket is connected\n";
         int tmpSock = _Socket;
@@ -242,10 +226,14 @@ int FtpClient::DownloadFile(char *filePath, char *localPath)
         char fileName[2048];
         bzero(fileName, 2048);
         strcpy(fileName, GetFileName(filePath));
-        SendMessage(msg); //sending RETR command
+        if(!SendMessage(msg)) //sending RETR command
+	{
+	  cout << "Command "<<msg << "wasn't sent\n";
+	  return SEND_ERROR;
+	}
         _Socket = _CmdSocket;
         int fileSize = GetFile(fileName, localPath);
-        if (fileSize)
+        if (fileSize > 0)
             cout << "File downloaded with a size of " << fileSize << endl;
         else cout << "File wasn't downloaded\n";
         _Socket = tmpSock;
@@ -277,13 +265,11 @@ int FtpClient::DownloadFile(char *filePath, char *localPath)
             return code;
         close(_CmdSocket);
         return 0;
-
-        //strcpy(buffer, Result);
     }
     catch (Exception ex)
     {
         cout << ex.Message << "\b" << ex.ErrorCode << endl;
-        return 1;
+        return EXCEPTION_CAUGHT;
     }
 }
 
@@ -294,13 +280,9 @@ int FtpClient::DownloadFolder(char *dir, char *lDir)
         char localdir[4096];
         strcpy(localdir, lDir);
         int error = ChangeDir(dir);
-        int ret = CreateThread();
-        cout << "thread="<<ret<<endl;
-        sleep(2);
         pthread_cancel(msgThread);
-        cout << "\nthread closed\n";
         if (error)
-            cout << "failed to change dir="<<dir<<" , errno="<<error<<endl;
+            cout << "Failed to change remote dir to "<<dir<<" , error="<<error<<endl;
         else cout << "\nRemote directory was changed to "<<dir<<endl;
         strcat(localdir, dir);
         if (!mkdir(localdir, 0777))
@@ -309,11 +291,9 @@ int FtpClient::DownloadFolder(char *dir, char *lDir)
         {
             cout <<"\nDirectory " << localdir << "wasn't created, err="<<errno<<endl;
             perror("\nerror=");
-
         }
         string list[1000];
         int i = 0, j = 0, n = 0;
-
         if (!List(dir))
         {
             while (j < strlen(Result))
@@ -331,12 +311,17 @@ int FtpClient::DownloadFolder(char *dir, char *lDir)
             }
             n = i;
         }
+        if(strlen(Result) == 0)
+	{
+	  cout << "\nLIST_CMD_FAILED\n";
+	  return LIST_CMD_FAILED;
+	}
         for (i = 0; i < n; i++)
         {
             int found;
-
+	    cout << "\nNUMBER OF ITEMS = "<<n<<endl;
             if (list[i][0] == 'd')
-            {
+            { //folder sau fisier cu spatii
                 found = list[i].find_last_of(' ');
                 string folder = list[i].substr(found+1);
                 if (folder != "." && folder != "..")
@@ -351,33 +336,36 @@ int FtpClient::DownloadFolder(char *dir, char *lDir)
             }
             else
             {
-//                 found = list[i].find_last_of(' ');
-//                 if (found == -1)
-//                     break;
-//                 char file[256];
-//                 strcpy(file, list[i].substr(found+1).c_str());
                 char seps[]   = " ";
                 char *token;
                 char file[512];
                 strcpy(file, list[i].c_str());
                 token = strtok(file, seps); //ia cate un cuvant
                 string vector[20];
+		int prop = 0;
                 while ( token != NULL )
                 {
-                    vector[i] = token; //punem cuvantul in vector
+                    vector[prop] = token; //punem cuvantul in vector
                     token = strtok( NULL, seps );
-                    i++; //numarul de proprietati
+                    prop++; //numarul de proprietati
                 }
-                strcpy(file, vector[i-1].c_str());
-                cout << "file ="<< file << endl;
+                if(prop > 9)
+		{
+		 for(int x = 8; x < prop; x++)
+		  {
+		    strcat(file, vector[x].c_str());
+		    strcat(file, " ");
+		  }
+		  file[strlen(file) - 1] = '\0';
+		}
+		else	strcpy(file, vector[prop-1].c_str());
                 char localPath[4096];
                 strcpy(localPath, localdir);
                 if (localdir[strlen(localdir)-1] != '/')
                     strcat(localPath, "/");
                 strcat(localPath, file);
-                cout<<"\nFile To Download="<<localPath<<endl;
-
-                pthread_cancel(msgThread);
+                cout<<"\nLocal file path="<<localPath<<endl;
+		cout<<"Remote file path="<<file<<endl;
                 int error = 0;
                 error = DownloadFile(file, localPath);
                 if (error == 0)
@@ -400,6 +388,8 @@ int FtpClient::DownloadFolder(char *dir, char *lDir)
     //for each dir, call this function
     //for each file, save them on local directory
     //
+    if(ChangeDir("..") == 550)
+      cout << "perm denied\n";
     return 0;
 }
 
@@ -538,7 +528,7 @@ int FtpClient::ChangeDir(char* dir)
         pthread_cancel(msgThread);
         SendMessage(buffer);
         strcpy(buffer, ReceiveMessage());
-        cout << buffer << endl;
+        cout << "CWD "<<dir<< " "<<buffer << endl;
         int code = GetCode(buffer);
 //         if (CreateThread())
 //             perror("can't create thread\n");

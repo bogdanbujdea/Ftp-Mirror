@@ -53,7 +53,7 @@ public:
     TcpClient(char* hostname);
     int ConnectToServer();
     int CloseConnection();
-    void SendMessage(char *buffer);
+    int SendMessage(char *buffer);
     char *ReceiveMessage();
     int GetCode(char *msg);
 

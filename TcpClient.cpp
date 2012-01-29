@@ -156,18 +156,19 @@ char *TcpClient::ReceiveMessage()
         else throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
 }
 
-void TcpClient::SendMessage(char *buffer)
+int TcpClient::SendMessage(char *buffer)
 {
-    int x = 0;
+    int size = 0;
     char message[strlen(buffer+5)];
     strcpy(message, buffer);
     strcat(message, "\n");
-    x = write (_Socket, message, strlen(message));
-    if (x <= 0)
+    size = write (_Socket, message, strlen(message));
+    if (size < 0)
     {
         Exception *ex = new Exception();
         throw(new Exception("Error while sending message:", SEND_EXCEPTION, errno));
     }
+    return size;
 }
 
 int TcpClient::CloseConnection()

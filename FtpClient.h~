@@ -24,7 +24,10 @@
 #include <fstream>
 
 using namespace std;
-
+#define 	PORT_ERROR 		11
+#define 	CONNECTION_ERROR 	12
+#define		SEND_ERROR		13
+#define		EXCEPTION_CAUGHT	14
 void *WaitForMessage( void *ptr );
 
 class FtpClient : public TcpClient
@@ -48,7 +51,7 @@ public:
     int GetSocket();
     int DownloadFolder(char *dir, char *localdir);
     int CreateThread();
-    int GetFile(char *filePath);
+    int GetFile(char *filePath, char *localPath);
     char *GetResult();
     //void *WaitForMessage( void *ptr );
     virtual ~FtpClient();

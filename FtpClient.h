@@ -24,7 +24,11 @@
 #include <fstream>
 
 using namespace std;
-
+#define 	PORT_ERROR 		11
+#define 	CONNECTION_ERROR 	12
+#define		SEND_ERROR		13
+#define		EXCEPTION_CAUGHT	14
+#define		LIST_CMD_FAILED		15
 void *WaitForMessage( void *ptr );
 
 class FtpClient : public TcpClient
