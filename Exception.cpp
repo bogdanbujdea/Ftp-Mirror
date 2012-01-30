@@ -44,22 +44,8 @@ Exception::Exception(char *message, ExceptionType exType, int errorCode)
     ErrorCode = errorCode;
 }
 
-Exception::Exception(const Exception& other)
-{
-
-}
 
 Exception::~Exception()
 {
-
-}
-
-Exception& Exception::operator=(const Exception& other)
-{
-    return *this;
-}
-
-bool Exception::operator==(const Exception& other) const
-{
-///TODO: return ...;
+  delete []Message;
 }

@@ -1,0 +1,6 @@
+Address=users9.nofeehost.com
+User=bogdanftp
+Password=bogdan12
+Port=21
+RemotePath=/bogdanftp
+LocalPath=/home/bogdan

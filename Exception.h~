@@ -41,7 +41,7 @@ public:
     Exception();
     Exception(char *message);
     Exception(char *message, ExceptionType exType);
-    Exception(char *message, ExceptionType exType, int ErrorCode);
+    Exception(char *message, ExceptionType exType, int errorCode);
     Exception(const Exception& other);
     virtual ~Exception();
     virtual Exception& operator=(const Exception& other);

@@ -33,7 +33,6 @@ void *WaitForMessage( void *ptr );
 
 class FtpClient : public TcpClient
 {
-    //TcpClient *tcpClient;
     char *userName, *password;
     char *Result;
 
@@ -46,7 +45,9 @@ public:
     int List(char *dir);
     int ChangeDir(char *dir);
     int DownloadFile(char *filePath, char *localPath);
-    FtpClient(const FtpClient& other);
+    char *GetPassword();
+    char *GetUsername();
+    char *GetCurrentDirectory();
     void SetPassword(char *pass);
     void SetUserName(char *name);
     int GetSocket();
@@ -54,10 +55,7 @@ public:
     int CreateThread();
     int GetFile(char *filePath, char *localPath);
     char *GetResult();
-    //void *WaitForMessage( void *ptr );
     virtual ~FtpClient();
-    virtual FtpClient& operator=(const FtpClient& other);
-    virtual bool operator==(const FtpClient& other) const;
 };
 
 #endif // FTPCLIENT_H
