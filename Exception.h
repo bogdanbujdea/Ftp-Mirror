@@ -27,7 +27,8 @@ enum ExceptionType
     {
         UNKNOWN_EXCEPTION,
         SEND_EXCEPTION,
-        RECV_EXCEPTION
+        RECV_EXCEPTION,
+	FILE_CREATE_EXCEPTION
     };
 
 class Exception
@@ -42,9 +43,7 @@ public:
     Exception(char *message);
     Exception(char *message, ExceptionType exType);
     Exception(char *message, ExceptionType exType, int errorCode);
-    Exception(const Exception& other);
     virtual ~Exception();
-    virtual Exception& operator=(const Exception& other);
-    virtual bool operator==(const Exception& other) const;
+   
 };
 #endif // EXCEPTION_H

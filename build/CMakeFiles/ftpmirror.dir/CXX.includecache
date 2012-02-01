@@ -49,8 +49,6 @@ string.h
 -
 string
 -
-pthread.h
--
 Exception.h
 /home/bogdan/projects/FtpMirror/Exception.h
 

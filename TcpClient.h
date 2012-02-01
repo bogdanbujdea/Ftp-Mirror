@@ -33,7 +33,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <string>
-#include <pthread.h>
+//#include <pthread.h>
 #include "Exception.h"
 using namespace std;
 extern int errno;
@@ -47,10 +47,12 @@ protected:
     char *_ip, *_hostname;
     
 public:
+  
     TcpClient();
-    pthread_t msgThread;
-    char *HostToIp(char *hostname);
     TcpClient(char* hostname);
+    
+    char *HostToIp(char *hostname);
+    
     int ConnectToServer();
     int CloseConnection();
     int SendMessage(char *buffer);
@@ -68,11 +70,10 @@ public:
     void SetSocket(int socket);
     void SetIp(char *ip);
     void SetHostName(char* hostname);
-
-    TcpClient(const TcpClient& other);
+    
+    
+    pthread_t msgThread;
     virtual ~TcpClient();
-    virtual TcpClient& operator=(const TcpClient& other);
-    virtual bool operator==(const TcpClient& other) const;
 };
 
 #endif // TCPCLIENT_H

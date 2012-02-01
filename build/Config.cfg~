@@ -1,0 +1,6 @@
+Address=ftp.kde.org
+User=anonymous
+Password=
+Port=21
+RemotePath=/
+LocalPath=/home/bogdan
