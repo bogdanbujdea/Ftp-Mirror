@@ -20,38 +20,58 @@
 
 #include "TcpClient.h"
 
-char *TcpClient::HostToIp(char *hostname)
+char *TcpClient::HostToIp ( char *hostname )
 {
     char *retVal;
     retVal = new char[100];
-    if (!isalpha(hostname[0]))
+    if ( isdigit ( hostname[0] ) )
         return hostname;
     struct hostent *host;
-    if ((host = gethostbyname(hostname)) == NULL)
+    if ( ( host = gethostbyname ( hostname ) ) == NULL )
     {
-        perror("(mini) nslookup failed");
-        exit(1);
+        perror ( "nslookup failed" );
+        return "error";
     }
-    //server.sin_addr.s_addr = *((unsigned long *) host->h_addr_list[0]);
-    strcpy(retVal, inet_ntoa(*((struct in_addr *)host->h_addr)));
+    strcpy ( retVal, inet_ntoa ( * ( ( struct in_addr * ) host->h_addr ) ) );
     return retVal;
+}
+
+char *TcpClient::GetHostName()
+{
+    return _hostname;
+}
+
+void TcpClient::SetHostName ( char *host )
+{
+//   cout << "sizeof(hostname)="<<sizeof(_hostname)<<"   strlen(host)="<<strlen(host)<<endl;
+    strcpy ( _hostname, host );
+    strcpy ( _ip, HostToIp ( _hostname ) );
 }
 
 TcpClient::TcpClient()
 {
+    _ip = new char[100];
+    _hostname = new char[1024];/*
+     cout << "sizeof(hostname)="<<sizeof(_hostname)<<endl;
+     cout << "sizeof(ip)="<<sizeof(_ip);*/
     _port = 21;
 }
 
-TcpClient::TcpClient(char *ip)
+char *TcpClient::GetIp()
+{
+    return _ip;
+}
+
+TcpClient::TcpClient ( char *ip )
 {
     _ip = new char[100];
     _hostname = new char[1024];
-    if (isdigit(ip[0]))
+    if ( isdigit ( ip[0] ) )
         _ip = ip;
     else
     {
-        strcpy(_hostname, ip);
-        strcpy(_ip, HostToIp(_hostname));
+        strcpy ( _hostname, ip );
+        strcpy ( _ip, HostToIp ( _hostname ) );
     }
 }
 
@@ -60,140 +80,144 @@ TcpClient::TcpClient(char *ip)
 int TcpClient::ConnectToServer()
 {
     /* cream socketul */
-    if ((_Socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
+    if ( ( _Socket = socket ( AF_INET, SOCK_STREAM, 0 ) ) == -1 )
     {
-        perror ("Eroare la socket().\n"); //ErrorHandler
+        perror ( "Eroare la socket().\n" );
         return errno;
     }
-    if (!isdigit(_ip[0]))
+    if ( !isdigit ( _ip[0] ) )
     {
-        strcpy(_hostname, _ip);
-        strcpy(_ip, HostToIp(_hostname));
+        strcpy ( _hostname, _ip );
+        strcpy ( _ip, HostToIp ( _hostname ) );
     }
-    _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
+    _CmdSocket = socket ( AF_INET, SOCK_STREAM, 0 );
     /* umplem structura folosita pentru realizarea conexiunii cu serverul */
     /* familia socket-ului */
     server.sin_family = AF_INET;
     /* adresa IP a serverului */
-    server.sin_addr.s_addr = inet_addr(_ip);
+    server.sin_addr.s_addr = inet_addr ( _ip );
     /* portul de conectare */
-    server.sin_port = htons (_port);
+    server.sin_port = htons ( _port );
 
     /* ne conectam la server */
-    if (connect (_Socket, (struct sockaddr *) &server,sizeof (sockaddr)) == -1)
+    if ( connect ( _Socket, ( struct sockaddr * ) &server,sizeof ( sockaddr ) ) == -1 )
     {
-        perror ("[client]Eroare la connect().\n"); //ErrorHandler
+        perror ( "[client]Eroare la connect().\n" ); //ErrorHandler
         return errno;
     }
     char buffer[256];
-    strcpy(buffer, ReceiveMessage());
-    cout << buffer;
-    if (GetCode(buffer) == 220)
+    strcpy ( buffer, ReceiveMessage() );
+    if ( GetCode ( buffer ) == 220 )
     {
-        cout << "Connected to server: " << this->_ip << endl;
+        cout << "\nConnected to server: " << this->_ip << endl;
         return 0;
     }
     else
     {
-        cout << "Connection failed";
+        cout << "\nConnection failed";
         return 1;
     }
     return 1;
 }
 
-int TcpClient::GetCode(char *msg)
+int TcpClient::GetCode ( char *msg )
 {
     char tmp[4];
-    if (msg == NULL || strlen(msg) <= 3)
+    if ( msg == NULL || strlen ( msg ) <= 3 )
         return 0;
-    for (int i = 0; i < 3; i++) tmp[i] = msg[i];
+    for ( int i = 0; i < 3; i++ ) tmp[i] = msg[i];
     tmp[3] = '\0';
-    int code = atoi(tmp);
+    int code = atoi ( tmp );
     return code;
 }
 
 
-void TcpClient::SetIp(char *ip)
+void TcpClient::SetIp ( char *ip )
 {
     _ip = ip;
 }
 
-void TcpClient::SetPort(int port)
+void TcpClient::SetPort ( int port )
 {
     _port = port;
 }
+
+
 
 char *TcpClient::ReceiveMessage()
 {
     char *buffer;
     buffer = new char[2048];
     string message;
-    bzero(buffer,2048);
-   char *retMsg;
+    bzero ( buffer,2048 );
+    char *retMsg;
     int size = 0;
-    //vezi cum primesti mesajele corect
-    //si faci alta fct pt dld fisiere
-    do {
-        size = read(_Socket,buffer,2047);
-        if(size > 0)
-	  message += buffer;
-	else
+    int multiline = 0;
+    do
+    {
+        size = read ( _Socket,buffer,2047 );
+        if ( size > 0 )
+            message += buffer;
+        else
+            break;
+	if(!multiline && buffer[3] == '-')
+	{
+	  multiline = 1;
+	  bzero(buffer, 2048);
+	  continue;
+	}
+	if(multiline == 1 && buffer[3] == ' ')
+	  break;
+	if(!multiline && buffer[strlen ( buffer ) - 1] == '\n')
 	  break;
     }
-    while (buffer[strlen(buffer) - 1] != '\n');
-    
-    if (size > 0)
+    while ( 1);
+
+    if ( size > 0 )
     {
-      retMsg = new char[message.length() + 1];
-      strcpy(retMsg, message.c_str());
-      int size = strlen(retMsg);
-      for(int i = size - 1; i > size - 3; i--) 
-	if(retMsg[i] == '\n' || retMsg[i] == '\r')
-	  retMsg[i] = '\0';
-      return retMsg;
+        retMsg = new char[message.length() + 1];
+        strcpy ( retMsg, message.c_str() );
+        int size = strlen ( retMsg );
+        for ( int i = size - 1; i > size - 3; i-- )
+            if ( retMsg[i] == '\n' || retMsg[i] == '\r' )
+                retMsg[i] = '\0';
+        return retMsg;
     }
-    else if (size == 0) return "";
-        else throw(new Exception("Error while receiving message", RECV_EXCEPTION, errno)); //ErrorHandler
+    else if ( size == 0 ) return "";
+    else throw ( new Exception ( "Error while receiving message", RECV_EXCEPTION, errno ) ); //ErrorHandler
 }
 
-int TcpClient::SendMessage(char *buffer)
+int TcpClient::SendMessage ( char *buffer )
 {
     int size = 0;
-    char message[strlen(buffer+5)];
-    strcpy(message, buffer);
-    strcat(message, "\n");
-    size = write (_Socket, message, strlen(message));
-    if (size <= 0)
+    char message[strlen ( buffer+5 ) ];
+    strcpy ( message, buffer );
+    strcat ( message, "\n" );
+    int cmdSize = 0;
+    do
+    {
+      size = write ( _Socket, message, strlen ( message ) );
+      cmdSize += size;
+    } while(cmdSize < strlen(buffer));
+    if ( size < 0 )
     {
         Exception *ex = new Exception();
-        throw(new Exception("Error while sending message:", SEND_EXCEPTION, errno));
+        throw ( new Exception ( "Error while sending message:", SEND_EXCEPTION, errno ) );
     }
     return size;
 }
 
 int TcpClient::CloseConnection()
 {
-    close (_Socket);
-    return 1;
+    SendMessage ( "QUIT" );
+    close ( _Socket );
+    return 0;
 }
 
-TcpClient::TcpClient(const TcpClient& other)
-{
 
-}
 
 TcpClient::~TcpClient()
 {
 
-}
-
-TcpClient& TcpClient::operator=(const TcpClient& other)
-{
-    return *this;
-}
-
-bool TcpClient::operator==(const TcpClient& other) const
-{
-///TODO: return ...;
 }
 

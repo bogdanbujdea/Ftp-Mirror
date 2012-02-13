@@ -56,6 +56,8 @@ public:
     int CreateThread();
     int GetFile(char *filePath, char *localPath);
     char *GetResult();
+    int mkdirs(char *remotePath, char *localPath);
+    int GoToParentDirectory();
     virtual ~FtpClient();
 };
 

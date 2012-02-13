@@ -143,12 +143,7 @@ int main ( int argc, char **argv )
         cout << "\nConsider using -l for local path";
         strcpy ( localPath, "/home" );
     }
-    if ( strlen ( remotePath ) == 0 )
-    {
-        cout << "The root will be specified as default, but it may not work if you don't have the permission";
-        cout << "\nConsider using -r for remote directory";
-        strcpy ( remotePath, "/" );
-    }
+
     if ( strlen ( client->GetIp() ) == 0 )
     {
         cout << "You must provide a ftp server using -h option";
@@ -174,7 +169,22 @@ int main ( int argc, char **argv )
     }
     else cout << "Login succesfull" << endl;
     cout << "Starting download\n";
-    if ( client->DownloadFolder ( client->GetCurrentDirectory(), localPath ) == 0 )
+    if ( strlen ( remotePath ) == 0 )
+    {
+        cout << "The root will be specified as default, but it may not work if you don't have the permission";
+        cout << "\nConsider using -r for remote directory";
+        strcpy ( remotePath, client->GetCurrentDirectory());
+    }
+    else
+    {
+      char tmpDir[1024];
+      strcpy(tmpDir, remotePath); /*remotePath trebuie copiat intr-o variabila si trimis ca parametru
+				    altfel caracterul '/' se va schimba in NULL dupa functia strtok din mkdirs()*/
+      if(!client->mkdirs(tmpDir, localPath)) 
+	cout << "\ndirectory was created\n";
+      else cout << "\ndirectory wasn't created\n";
+    }
+    if ( client->DownloadFolder ( remotePath, localPath ) == 0 )
         cout << "\nDownload succesfull\n";
     else cout << "\nError encountered while downloading folders\n";
     client->CloseConnection();

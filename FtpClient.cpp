@@ -359,11 +359,15 @@ int FtpClient::DownloadFolder ( char *dir, char *lDir )
                     file[strlen ( file ) - 1] = '\0';
                 }
                 else	strcpy ( file, vector[prop-1].c_str() );
+		if(prop < 9)
+		  continue;
                 char localPath[4096];
                 strcpy ( localPath, localdir );
                 if ( localdir[strlen ( localdir )-1] != '/' )
                     strcat ( localPath, "/" );
                 strcat ( localPath, file );
+		if(i > 57)
+		  i = i;
                 cout<<"\nDownloading file="<<file<<endl;
                 int error = 0;
                 error = DownloadFile ( file, localPath );
@@ -379,6 +383,30 @@ int FtpClient::DownloadFolder ( char *dir, char *lDir )
         cout << ex.Message << endl << ex.ErrorCode << endl;
         return 1;
     }
+    GoToParentDirectory();
+    return 0;
+}
+
+int FtpClient::GoToParentDirectory()
+{
+    try
+    {
+        if (!SendMessage("CDUP")) //go to parent directory
+            return 1;
+        char buffer[512];
+        strcpy(buffer, ReceiveMessage());
+        chdir("..");
+        //getcwd(buffer, 512);
+        //strcpy(localPath, buffer);
+        int code = GetCode(buffer);
+        //handle the code here
+	return 0;
+    }
+    catch (Exception ex)
+    {
+        cout << ex.Message << endl;
+        return 1;
+    }
     return 0;
 }
 
@@ -389,7 +417,7 @@ int FtpClient::GetFile ( char *filePath, char *localPath )
     bzero ( buffer,2048 );
     int size = 0, fileSize = 0;
     ofstream file ( localPath, ios::out | ios::binary );
-    if ( !file.is_open() )
+    if ( !file.is_open() && errno != 2)
         throw ( new Exception ( "Couldn't create new file", FILE_CREATE_EXCEPTION, errno ) );
     do
     {
@@ -500,6 +528,23 @@ int FtpClient::List ( char *dir )
 int FtpClient::CreateThread()
 {
    // return pthread_create ( &msgThread, NULL, WaitForMessage, NULL );
+}
+
+int FtpClient::mkdirs(char *remotePath, char *localPath)
+{
+    char *token = strtok(remotePath,  "//");
+    char newDir[1024];
+    bzero(newDir, 1024);
+    strcpy(newDir, localPath);
+    while(token != NULL)
+    {
+      strcat(newDir, "/");
+      strcat(newDir, token);
+      if ( mkdir ( newDir, 0777 )  || (errno != 0 && errno != EEXIST))
+	return 1;
+      token = strtok(NULL, "/");
+    }
+    return 0;
 }
 
 char *FtpClient::GetCurrentDirectory()

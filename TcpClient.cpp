@@ -152,6 +152,7 @@ char *TcpClient::ReceiveMessage()
     bzero ( buffer,2048 );
     char *retMsg;
     int size = 0;
+    int multiline = 0;
     do
     {
         size = read ( _Socket,buffer,2047 );
@@ -159,8 +160,18 @@ char *TcpClient::ReceiveMessage()
             message += buffer;
         else
             break;
+	if(!multiline && buffer[3] == '-')
+	{
+	  multiline = 1;
+	  bzero(buffer, 2048);
+	  continue;
+	}
+	if(multiline == 1 && buffer[3] == ' ')
+	  break;
+	if(buffer[strlen ( buffer ) - 1] == '\n')
+	  break;
     }
-    while ( buffer[strlen ( buffer ) - 1] != '\n' );
+    while ( 1);
 
     if ( size > 0 )
     {

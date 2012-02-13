@@ -359,11 +359,15 @@ int FtpClient::DownloadFolder ( char *dir, char *lDir )
                     file[strlen ( file ) - 1] = '\0';
                 }
                 else	strcpy ( file, vector[prop-1].c_str() );
+		if(prop < 9)
+		  continue;
                 char localPath[4096];
                 strcpy ( localPath, localdir );
                 if ( localdir[strlen ( localdir )-1] != '/' )
                     strcat ( localPath, "/" );
                 strcat ( localPath, file );
+		if(i > 57)
+		  i = i;
                 cout<<"\nDownloading file="<<file<<endl;
                 int error = 0;
                 error = DownloadFile ( file, localPath );
@@ -379,6 +383,30 @@ int FtpClient::DownloadFolder ( char *dir, char *lDir )
         cout << ex.Message << endl << ex.ErrorCode << endl;
         return 1;
     }
+    GoToParentDirectory();
+    return 0;
+}
+
+int FtpClient::GoToParentDirectory()
+{
+    try
+    {
+        if (!SendMessage("CDUP")) //go to parent directory
+            return 1;
+        char buffer[512];
+        strcpy(buffer, GetResponse());
+        chdir("..");
+        //getcwd(buffer, 512);
+        //strcpy(localPath, buffer);
+        int code = GetCode(buffer);
+        //handle the code here
+	return 0;
+    }
+    catch (Exception ex)
+    {
+        cout << ex.Message << endl;
+        return 1;
+    }
     return 0;
 }
 
@@ -389,7 +417,7 @@ int FtpClient::GetFile ( char *filePath, char *localPath )
     bzero ( buffer,2048 );
     int size = 0, fileSize = 0;
     ofstream file ( localPath, ios::out | ios::binary );
-    if ( !file.is_open() )
+    if ( !file.is_open() && errno != 2)
         throw ( new Exception ( "Couldn't create new file", FILE_CREATE_EXCEPTION, errno ) );
     do
     {
@@ -414,92 +442,109 @@ int FtpClient::GetSocket()
     return _Socket;
 }
 
-int FtpClient::List(char *dir)
+int FtpClient::List ( char *dir )
 {
-    //prepare command for LIST
-    //send PASV
-    //send LIST command
-    //switch Sockets
-
-
+    if ( _CmdSocket == -1 )
+        return -1;
     try
     {
         int code = 0;
-        char buffer[LARGE_BUFFER];
-        SendMessage("PASV");
-        strcpy(buffer, ReceiveMessage());
-        code = GetCode(buffer);
-        if (code != 227)
+        char buffer[4096];
+        SendMessage ( "PASV" );
+        strcpy ( buffer, ReceiveMessage() );
+        code = GetCode ( buffer );
+        if ( code != 227 )
             return code;
-        //cout << endl << buffer << endl;
-        int port = GetPortFromCode(buffer);
-        server.sin_port = htons (port);
+        cout << endl << buffer << endl;
+        int port = GetPortFromCode ( buffer );
+        server.sin_port = htons ( port );
         /* ne conectam la server */
-        _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
-        if (connect (_CmdSocket, (struct sockaddr *) &server,sizeof (sockaddr)) == -1)
+        _CmdSocket = socket ( AF_INET, SOCK_STREAM, 0 );
+        if ( connect ( 	_CmdSocket, ( struct sockaddr * ) &server,sizeof ( sockaddr ) ) == -1 )
         {
-            cout << "[CmdClient]Eroare la connect().\n" << endl;
+            perror ( "[CmdClient]Eroare la connect().\n" );
             return errno;
         }
         else cout << "CmdSocket conectat\n";
         int tmp = _Socket;
         char tmpDir[4096];
-        if (strlen(dir) && strcmp(dir, "this"))
+        if ( strlen ( dir ) && strcmp ( dir, "this" ) )
         {
-            strcpy(tmpDir, "LIST ");
-            strcat(tmpDir, dir);
+            strcpy ( tmpDir, "LIST " );
+            strcat ( tmpDir, dir );
         }
-        else strcpy(tmpDir, "LIST");
-        cout << "\nsending "<<tmpDir<<endl;
-        SendMessage(tmpDir);
+        else strcpy ( tmpDir, "LIST" );
+        SendMessage ( tmpDir );
         _Socket = _CmdSocket;
-        strcpy(buffer, GetPassiveMessage());
-        cout << endl << "\nLIST RESULT:\n" << buffer;
-        if (strlen(buffer) == 0 || !strcmp(buffer, "error"))
-            return 3;
-        bzero(Result, VL_BUFFER);
-        strcpy(Result, buffer);
+        usleep(100);
+        strcpy ( buffer, GetResponse() );
+        usleep(100);
         _Socket = tmp;
-        strcpy(buffer, ReceiveMessage());
+        cout << endl << "\Listing directory \n" << buffer<<endl;
+        if ( strlen ( buffer ) == 0 )
+            return LIST_CMD_FAILED;
+        bzero ( Result, 4096 );
+        strcpy ( Result, buffer );
+
+        strcpy ( buffer, ReceiveMessage() );
         cout << endl << buffer << endl;
-        code = GetCode(buffer);
-        if (code != 150)
+        code = GetCode ( buffer );
+        if ( code != 150 )
             return code;
         code = -1;
-        for (int i = 0; i < strlen(buffer); i++)
+        for ( int i = 0; i < strlen ( buffer ); i++ )
         {
-            if (buffer[i] == '\n' && i < strlen(buffer) - 3)
+            if ( buffer[i] == '\n' && i < strlen ( buffer ) - 3 )
             {
                 char tmp[4];
                 tmp[0] = buffer[i+1];
                 tmp[1] = buffer[i+2];
                 tmp[2] = buffer[i+3];
                 tmp[3] = '\0';
-                code = atoi(tmp);
+                code = atoi ( tmp );
                 break;
             }
         }
-        if (code == -1)
+        if ( code == -1 )
         {
-            strcpy(buffer, ReceiveMessage());
+            strcpy ( buffer, ReceiveMessage() );
             cout << endl << buffer << endl;
-            code = GetCode(buffer);
+            code = GetCode ( buffer );
         }
-        if (code != 226)
+        if ( code != 226 )
             return code;
-        close(_CmdSocket);
+        close ( _CmdSocket );
     }
-    catch (Exception ex)
+    catch ( Exception ex )
     {
         cout << ex.Message << endl;
         return ex.ErrorCode;
     }
+    return 0;
 }
+
 
 
 int FtpClient::CreateThread()
 {
    // return pthread_create ( &msgThread, NULL, WaitForMessage, NULL );
+}
+
+int FtpClient::mkdirs(char *remotePath, char *localPath)
+{
+    char *token = strtok(remotePath,  "//");
+    char newDir[1024];
+    bzero(newDir, 1024);
+    strcpy(newDir, localPath);
+    while(token != NULL)
+    {
+      strcat(newDir, "/");
+      strcat(newDir, token);
+      if ( mkdir ( newDir, 0777 )  || (errno != 0 && errno != EEXIST))
+	return 1;
+      token = strtok(NULL, "/");
+    }
+    return 0;
 }
 
 char *FtpClient::GetCurrentDirectory()

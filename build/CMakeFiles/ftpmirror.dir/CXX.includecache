@@ -22,10 +22,6 @@ TcpClient.h
 fstream
 -
 
-/home/bogdan/projects/FtpMirror/TcpClient.cpp
-TcpClient.h
-/home/bogdan/projects/FtpMirror/TcpClient.h
-
 /home/bogdan/projects/FtpMirror/TcpClient.h
 iostream
 -
@@ -55,10 +51,4 @@ string
 -
 Exception.h
 /home/bogdan/projects/FtpMirror/Exception.h
-
-/home/bogdan/projects/FtpMirror/main.cpp
-FtpClient.h
-/home/bogdan/projects/FtpMirror/FtpClient.h
-stdlib.h
--
 
