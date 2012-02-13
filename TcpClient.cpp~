@@ -43,7 +43,6 @@ char *TcpClient::GetHostName()
 
 void TcpClient::SetHostName ( char *host )
 {
-//   cout << "sizeof(hostname)="<<sizeof(_hostname)<<"   strlen(host)="<<strlen(host)<<endl;
     strcpy ( _hostname, host );
     strcpy ( _ip, HostToIp ( _hostname ) );
 }
@@ -71,7 +70,7 @@ TcpClient::TcpClient ( char *ip )
     else
     {
         strcpy ( _hostname, ip );
-        strcpy ( _ip, HostToIp ( _hostname ) );
+        strcpy ( _ip, HostToIp ( _hostname ) ); //HostToIp will return the IP if the string ip is a host name, or just the ip otherwise
     }
 }
 
@@ -91,18 +90,14 @@ int TcpClient::ConnectToServer()
         strcpy ( _ip, HostToIp ( _hostname ) );
     }
     _CmdSocket = socket ( AF_INET, SOCK_STREAM, 0 );
-    /* umplem structura folosita pentru realizarea conexiunii cu serverul */
-    /* familia socket-ului */
+    
     server.sin_family = AF_INET;
-    /* adresa IP a serverului */
     server.sin_addr.s_addr = inet_addr ( _ip );
-    /* portul de conectare */
     server.sin_port = htons ( _port );
 
-    /* ne conectam la server */
     if ( connect ( _Socket, ( struct sockaddr * ) &server,sizeof ( sockaddr ) ) == -1 )
     {
-        perror ( "[client]Eroare la connect().\n" ); //ErrorHandler
+        perror ( "[client]Eroare la connect().\n" );
         return errno;
     }
     char buffer[256];
@@ -128,7 +123,7 @@ int TcpClient::GetCode ( char *msg )
     for ( int i = 0; i < 3; i++ ) tmp[i] = msg[i];
     tmp[3] = '\0';
     int code = atoi ( tmp );
-    return code;
+    return code; //returns a three digit code
 }
 
 
@@ -157,21 +152,35 @@ char *TcpClient::ReceiveMessage()
     {
         size = read ( _Socket,buffer,2047 );
         if ( size > 0 )
-            message += buffer;
+            message += buffer; //we add the message in a string
         else
             break;
-	if(!multiline && buffer[3] == '-')
+	if(!multiline && buffer[3] == '-') //if we find a '-'
 	{
-	  multiline = 1;
-	  bzero(buffer, 2048);
-	  continue;
+	  multiline = 1; //set the multiline variable to 1
+	  bzero(buffer, 2048); //empty the buffer
+	  continue; //continue, or we will exit on the next if statement
 	}
 	if(multiline == 1 && buffer[3] == ' ')
 	  break;
-	if(!multiline && buffer[strlen ( buffer ) - 1] == '\n')
+	if(buffer[strlen ( buffer ) - 1] == '\n')
 	  break;
     }
     while ( 1);
+    /*Sometimes, servers might reply with a multi-line message, and if we only want one line
+     * the rest of the command is waiting to be received, so next time we want to receive something
+     * we won't get what we would expect
+     * Example: The FTP server ftp.kde.org sends a multiline message after you list the /pub/kde folder
+     * Multiline messages will start with a three digit code followed by a '-' character
+     * A normal message, has three digits, followed by a space and a message, so this is how we know
+     * what type of message we are receiving
+     * ftp.kde.org sends something like this
+     * 250-         Hello! This is the ftp server....
+     * 250-Some information
+     * 250-about the server
+     * 250-some rules
+     * 250-and the end of message*/
+    
 
     if ( size > 0 )
     {
@@ -192,8 +201,8 @@ int TcpClient::SendMessage ( char *buffer )
     int size = 0;
     char message[strlen ( buffer+5 ) ];
     strcpy ( message, buffer );
-    strcat ( message, "\n" );
-    int cmdSize = 0;
+    strcat ( message, "\n" ); //append a new line to the message, so the server know's we sent the entire message
+    int cmdSize = 0; //command size, this will help us ensure that the entire message will be sent
     do
     {
       size = write ( _Socket, message, strlen ( message ) );

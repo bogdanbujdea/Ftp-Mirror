@@ -1,6 +1,7 @@
-Address=ftp.mozilla.org
+Address=ftp.kde.org
 User=anonymous
 Password=
 Port=21
-RemotePath=/pub/mozilla.org/
+RemotePath=/pub/kde/doc
 LocalPath=/home/bogdan
+Refresh=1

@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2012  <copyright holder> <email>
+    <This software is a FTP client used to download a copy of a FTP server.>
+    Copyright (C) 2012  <Bujdea Bogdan> <costinel.bujdea@info.uaic.ro>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ FtpClient::FtpClient ( char *ip ) : TcpClient ( ip )
     password = new char[1024];
     strcpy ( userName, "anonymous" );
     strcpy ( password, "pass@mail.com" );
-
+    Refresh = 0;
     _port = 21;
 }
 
@@ -165,19 +165,15 @@ char* GetFileName ( char *filePath )
     int i = 0, k;
     char *token;
     char seps[]   = " ";
-    token = strtok ( filePath,seps ); //ia cate un cuvant
+    token = strtok ( filePath,seps );
     string vector[10];
     while ( token != NULL )
     {
-        vector[i] = token; //punem cuvantul in vector
+        vector[i] = token;
         token = strtok ( NULL, seps );
-        i++; //numarul de proprietati
+        i++; //number of properties
     }
     strcpy ( fileName, vector[i-1].c_str() );
-    if(strstr(fileName, "Microsoft"))
-      int i = 0;
-    if ( !strcmp ( fileName, "index.htm" ) )
-        int d=0;
     return fileName;
 }
 
@@ -368,7 +364,7 @@ int FtpClient::DownloadFolder ( char *dir, char *lDir )
                 strcat ( localPath, file );
 		if(i > 57)
 		  i = i;
-                cout<<"\nDownloading file="<<file<<endl;
+                cout<<"\nDownloading file:"<<file;
                 int error = 0;
                 error = DownloadFile ( file, localPath );
                 if ( error == 0 )
@@ -394,7 +390,7 @@ int FtpClient::GoToParentDirectory()
         if (!SendMessage("CDUP")) //go to parent directory
             return 1;
         char buffer[512];
-        strcpy(buffer, GetResponse());
+        strcpy(buffer, ReceiveMessage());
         chdir("..");
         //getcwd(buffer, 512);
         //strcpy(localPath, buffer);
@@ -416,6 +412,13 @@ int FtpClient::GetFile ( char *filePath, char *localPath )
     buffer = new char[2048];
     bzero ( buffer,2048 );
     int size = 0, fileSize = 0;
+    if(Refresh)
+    {
+      ifstream f(localPath, ios::in );
+      if(f.is_open())
+	return 0;
+      f.close();
+    }
     ofstream file ( localPath, ios::out | ios::binary );
     if ( !file.is_open() && errno != 2)
         throw ( new Exception ( "Couldn't create new file", FILE_CREATE_EXCEPTION, errno ) );
@@ -525,10 +528,7 @@ int FtpClient::List ( char *dir )
 
 
 
-int FtpClient::CreateThread()
-{
-   // return pthread_create ( &msgThread, NULL, WaitForMessage, NULL );
-}
+
 
 int FtpClient::mkdirs(char *remotePath, char *localPath)
 {
@@ -540,8 +540,7 @@ int FtpClient::mkdirs(char *remotePath, char *localPath)
     {
       strcat(newDir, "/");
       strcat(newDir, token);
-      if ( mkdir ( newDir, 0777 )  || (errno != 0 && errno != EEXIST))
-	return 1;
+      mkdir ( newDir, 0777 );
       token = strtok(NULL, "/");
     }
     return 0;
@@ -637,7 +636,7 @@ char *FtpClient::GetResponse()
         int size = strlen ( retMsg );
         return retMsg;
     }
-    else if ( message.length() == 0 ) return "111 Nothing Received";
+    else if ( message.length() == 0 ) return "123 Nothing Received"; //return some error
     else throw ( new Exception ( "Error while receiving message", RECV_EXCEPTION, errno ) ); //ErrorHandler
 }
 
@@ -650,19 +649,23 @@ int FtpClient::Login()
         int code;
         strcpy ( buffer, "USER " );
         strcat ( buffer, this->userName );
+	cout << buffer << endl;
         if (!SendMessage ( buffer ))
         {
             perror("Can't send message\n");
             return 1;
         }
         strcpy ( buffer, ReceiveMessage() ); //receiving confirmation
+	cout << buffer << endl;
         code = GetCode ( buffer );
         if ( code != 331 ) //if the FTP server sent a code that it's not 331, than we've got problems
             return code;
         strcpy ( buffer, "PASS " );
         strcat ( buffer, password );
+	cout << buffer << endl;
         SendMessage ( buffer ); //now we have to send the password
         strcpy ( buffer, ReceiveMessage() );
+	cout << buffer << endl;
         code = GetCode ( buffer );
         Sock = _Socket;
         if ( code != 230 ) //if something went wrong, then we send the code back to the calling function

@@ -38,10 +38,7 @@
 using namespace std;
 extern int errno;
 
-#define SMALL_BUFFER 512
-#define MEDIUM_BUFFER 2048
-#define LARGE_BUFFER 4096
-#define VL_BUFFER	10000
+
 
 class TcpClient
 {
@@ -58,11 +55,11 @@ public:
     
     char *HostToIp(char *hostname);
     
-    int ConnectToServer();
-    int CloseConnection();
-    int SendMessage(char *buffer);
-    char *ReceiveMessage();
-    int GetCode(char *msg);
+    int ConnectToServer(); //connects to a ftp server
+    int CloseConnection(); //disconnect
+    int SendMessage(char *buffer); //send
+    char *ReceiveMessage(); //receive
+    int GetCode(char *msg); //retrieves a code from the server's response
 
     //getters
     int GetPort();

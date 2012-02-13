@@ -1,13 +1,29 @@
+/*
+    <This software is a FTP client used to download a copy of a FTP server.>
+    Copyright (C) 2012  <Bujdea Bogdan> <costinel.bujdea@info.uaic.ro>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 #include "FtpClient.h"
 #include <stdlib.h>
-
-
-
 
 FtpClient *client;
 char localPath[256], remotePath[256];
 
-int LoadSettings ( char *file )
+int LoadSettings ( char *file ) //loads setting from a configuration file
 {
     ifstream f ( file, ios::in );
     if ( !f.is_open() )
@@ -50,6 +66,11 @@ int LoadSettings ( char *file )
             int port = atoi ( value );
             client->SetPort ( port );
         }
+        else if (!strcmp(key, "Refresh"))
+	{
+	  int tmp = atoi(value);
+	  client->Refresh = tmp;
+	}
     }
     f.close();
     return 0;
@@ -57,6 +78,13 @@ int LoadSettings ( char *file )
 
 void ShowHelp()
 {
+  char *license="<FtpMirror>  Copyright (C) <2012>  <Bujdea Bogdan>\n"
+    "This program comes with ABSOLUTELY NO WARRANTY\n"
+    "This is free software, and you are welcome to redistribute it\n"
+    "under certain conditions; press 'Enter' for details.\n\n";
+    cout << license;
+    cout << "\nPress Enter to continue...";
+    getchar();
     cout << "HELP\n";
     cout << "Usage ftpmirror [OPTIONS]\n\n";
     cout << "Downloads a directory from a FTP server\n";
@@ -66,6 +94,7 @@ void ShowHelp()
     cout << "-port\t\tPort\n";
     cout << "-l\t\tLocalPath\n";
     cout << "-r\t\tRemoteDirectory\n";
+    cout << "-refresh\t\tRefresh directory\n";
     cout << "-c\t\tConfigFile\n";
     cout << "\t\tThe config will have each option on one line\n followed by '=' and the value for that option\n";
     cout << "\tExample:\n\n";
@@ -76,8 +105,8 @@ void ShowHelp()
 
 int main ( int argc, char **argv )
 {
-    client= new FtpClient ();//"users9.nofeehost.com"
-
+    client= new FtpClient ();
+    int Refresh = 0;
     if ( argc > 1 )
     {
         for ( int i = 1; i < argc; i++ )
@@ -86,6 +115,11 @@ int main ( int argc, char **argv )
 	    {
 	      ShowHelp();
 	      return 0;
+	    }
+	    if(!strcmp(argv[i], "-refresh"))
+	    {
+		Refresh = 1;
+		break;
 	    }
             if ( !strcmp ( argv[i], "-c" ) )
             {
@@ -148,13 +182,7 @@ int main ( int argc, char **argv )
     {
         cout << "You must provide a ftp server using -h option";
         exit ( 1 );
-    }/*
-    cout<<"\nAddress="<<client->GetHostName();
-    cout<<"\nIp="<<client->GetIp();
-    cout<<"\nUser="<<client->GetUsername();
-    cout<<"\nPassword="<<client->GetPassword();
-    cout<<"\nLocalPath="<<localPath;
-    cout<<"\nRemotePath="<<remotePath<<endl;*/
+    }
     int code = 0;
     if ( client->ConnectToServer() )
     {
@@ -168,8 +196,7 @@ int main ( int argc, char **argv )
         exit ( 1 );
     }
     else cout << "Login succesfull" << endl;
-    cout << "Starting download\n";
-    if ( strlen ( remotePath ) == 0 )
+    if ( strlen ( remotePath ) == 0 ) //if a remote path won't be specified, then the client will get the current directory from the server
     {
         cout << "The root will be specified as default, but it may not work if you don't have the permission";
         cout << "\nConsider using -r for remote directory";
@@ -178,15 +205,18 @@ int main ( int argc, char **argv )
     else
     {
       char tmpDir[1024];
-      strcpy(tmpDir, remotePath);
-      if(!client->mkdirs(tmpDir, localPath))
-	cout << "\ndirectory was created\n";
-      else cout << "\ndirectory wasn't created\n";
+      strcpy(tmpDir, remotePath); /*remotePath trebuie copiat intr-o variabila si trimis ca parametru
+				    altfel caracterul '/' se va schimba in NULL dupa functia strtok din mkdirs()*/
+      if(client->mkdirs(tmpDir, localPath)) 
+	cout << "\ndirectory wasn't created\n";
     }
+    
     if ( client->DownloadFolder ( remotePath, localPath ) == 0 )
-        cout << "\nDownload succesfull\n";
-    else cout << "\nError encountered while downloading folders\n";
+        cout << "\nDirectory download succesfull! The program will now exit\n";
+    else cout << "\n\n\nError encountered while downloading folders. The program will now exit\n";
     client->CloseConnection();
+    sleep(5);
+    exit(0);
 }
 
 

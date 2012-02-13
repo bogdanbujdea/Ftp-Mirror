@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2012  <copyright holder> <email>
+    <This software is a FTP client used to download a copy of a FTP server.>
+    Copyright (C) 2012  <Bujdea Bogdan> <costinel.bujdea@info.uaic.ro>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -55,11 +55,11 @@ public:
     
     char *HostToIp(char *hostname);
     
-    int ConnectToServer();
-    int CloseConnection();
-    int SendMessage(char *buffer);
-    char *ReceiveMessage();
-    int GetCode(char *msg);
+    int ConnectToServer(); //connects to a ftp server
+    int CloseConnection(); //disconnect
+    int SendMessage(char *buffer); //send
+    char *ReceiveMessage(); //receive
+    int GetCode(char *msg); //retrieves a code from the server's response
 
     //getters
     int GetPort();

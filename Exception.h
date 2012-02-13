@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2012  <copyright holder> <email>
+    <This software is a FTP client used to download a copy of a FTP server.>
+    Copyright (C) 2012  <Bujdea Bogdan> <costinel.bujdea@info.uaic.ro>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
