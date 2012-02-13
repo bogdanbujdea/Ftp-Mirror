@@ -33,10 +33,15 @@
 #include <netdb.h>
 #include <string.h>
 #include <string>
-#include <pthread.h>
+//#include <pthread.h>
 #include "Exception.h"
 using namespace std;
 extern int errno;
+
+#define SMALL_BUFFER 512
+#define MEDIUM_BUFFER 2048
+#define LARGE_BUFFER 4096
+#define VL_BUFFER	10000
 
 class TcpClient
 {
@@ -47,13 +52,15 @@ protected:
     char *_ip, *_hostname;
     
 public:
+  
     TcpClient();
-    pthread_t msgThread;
-    char *HostToIp(char *hostname);
     TcpClient(char* hostname);
+    
+    char *HostToIp(char *hostname);
+    
     int ConnectToServer();
     int CloseConnection();
-    void SendMessage(char *buffer);
+    int SendMessage(char *buffer);
     char *ReceiveMessage();
     int GetCode(char *msg);
 
@@ -68,11 +75,10 @@ public:
     void SetSocket(int socket);
     void SetIp(char *ip);
     void SetHostName(char* hostname);
-
-    TcpClient(const TcpClient& other);
+    
+    
+    pthread_t msgThread;
     virtual ~TcpClient();
-    virtual TcpClient& operator=(const TcpClient& other);
-    virtual bool operator==(const TcpClient& other) const;
 };
 
 #endif // TCPCLIENT_H

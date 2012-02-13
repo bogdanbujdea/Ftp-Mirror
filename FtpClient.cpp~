@@ -176,7 +176,6 @@ char* GetFileName ( char *filePath )
     strcpy ( fileName, vector[i-1].c_str() );
     if(strstr(fileName, "Microsoft"))
       int i = 0;
-    cout << "\nfileName="<<fileName<<endl;
     if ( !strcmp ( fileName, "index.htm" ) )
         int d=0;
     return fileName;
@@ -415,87 +414,87 @@ int FtpClient::GetSocket()
     return _Socket;
 }
 
-int FtpClient::List ( char *dir )
+int FtpClient::List(char *dir)
 {
-    if ( _CmdSocket == -1 )
-        return -1;
+    //prepare command for LIST
+    //send PASV
+    //send LIST command
+    //switch Sockets
+
+
     try
     {
         int code = 0;
-        char buffer[4096];
-        SendMessage ( "PASV" );
-        strcpy ( buffer, ReceiveMessage() );
-        code = GetCode ( buffer );
-        if ( code != 227 )
+        char buffer[LARGE_BUFFER];
+        SendMessage("PASV");
+        strcpy(buffer, ReceiveMessage());
+        code = GetCode(buffer);
+        if (code != 227)
             return code;
-        cout << endl << buffer << endl;
-        int port = GetPortFromCode ( buffer );
-        server.sin_port = htons ( port );
+        //cout << endl << buffer << endl;
+        int port = GetPortFromCode(buffer);
+        server.sin_port = htons (port);
         /* ne conectam la server */
-        _CmdSocket = socket ( AF_INET, SOCK_STREAM, 0 );
-        if ( connect ( 	_CmdSocket, ( struct sockaddr * ) &server,sizeof ( sockaddr ) ) == -1 )
+        _CmdSocket = socket(AF_INET, SOCK_STREAM, 0);
+        if (connect (_CmdSocket, (struct sockaddr *) &server,sizeof (sockaddr)) == -1)
         {
-            perror ( "[CmdClient]Eroare la connect().\n" );
+            cout << "[CmdClient]Eroare la connect().\n" << endl;
             return errno;
         }
         else cout << "CmdSocket conectat\n";
         int tmp = _Socket;
         char tmpDir[4096];
-        if ( strlen ( dir ) && strcmp ( dir, "this" ) )
+        if (strlen(dir) && strcmp(dir, "this"))
         {
-            strcpy ( tmpDir, "LIST " );
-            strcat ( tmpDir, dir );
+            strcpy(tmpDir, "LIST ");
+            strcat(tmpDir, dir);
         }
-        else strcpy ( tmpDir, "LIST" );
-        SendMessage ( tmpDir );
+        else strcpy(tmpDir, "LIST");
+        cout << "\nsending "<<tmpDir<<endl;
+        SendMessage(tmpDir);
         _Socket = _CmdSocket;
-        usleep(100);
-        strcpy ( buffer, GetResponse() );
-        usleep(100);
+        strcpy(buffer, GetPassiveMessage());
+        cout << endl << "\nLIST RESULT:\n" << buffer;
+        if (strlen(buffer) == 0 || !strcmp(buffer, "error"))
+            return 3;
+        bzero(Result, VL_BUFFER);
+        strcpy(Result, buffer);
         _Socket = tmp;
-        cout << endl << "\Listing directory \n" << buffer<<endl;
-        if ( strlen ( buffer ) == 0 )
-            return LIST_CMD_FAILED;
-        bzero ( Result, 4096 );
-        strcpy ( Result, buffer );
-
-        strcpy ( buffer, ReceiveMessage() );
+        strcpy(buffer, ReceiveMessage());
         cout << endl << buffer << endl;
-        code = GetCode ( buffer );
-        if ( code != 150 )
+        code = GetCode(buffer);
+        if (code != 150)
             return code;
         code = -1;
-        for ( int i = 0; i < strlen ( buffer ); i++ )
+        for (int i = 0; i < strlen(buffer); i++)
         {
-            if ( buffer[i] == '\n' && i < strlen ( buffer ) - 3 )
+            if (buffer[i] == '\n' && i < strlen(buffer) - 3)
             {
                 char tmp[4];
                 tmp[0] = buffer[i+1];
                 tmp[1] = buffer[i+2];
                 tmp[2] = buffer[i+3];
                 tmp[3] = '\0';
-                code = atoi ( tmp );
+                code = atoi(tmp);
                 break;
             }
         }
-        if ( code == -1 )
+        if (code == -1)
         {
-            strcpy ( buffer, ReceiveMessage() );
+            strcpy(buffer, ReceiveMessage());
             cout << endl << buffer << endl;
-            code = GetCode ( buffer );
+            code = GetCode(buffer);
         }
-        if ( code != 226 )
+        if (code != 226)
             return code;
-        close ( _CmdSocket );
+        close(_CmdSocket);
     }
-    catch ( Exception ex )
+    catch (Exception ex)
     {
         cout << ex.Message << endl;
         return ex.ErrorCode;
     }
-    return 0;
 }
-
 
 
 int FtpClient::CreateThread()
